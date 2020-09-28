@@ -1,0 +1,40 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model Online_Auction.ViewModels.ProfileViewModel;
+
+@{
+    ViewBag.Title = "Профиль";
+    Layout = "_Layout";
+}
+
+<h2>Профиль</h2> 
+
+<div class="form-group">
+    <label asp-for="UserName" class="control-label">Имя юзера:</label>
+    <span class="badge-primary">@Model.UserName</span> 
+</div>
+
+<div class="form-group">
+    <label asp-for="Email" class="control-label">Email:</label> 
+    <span class="badge-primary">@Model.Email</span> 
+</div>
+
+<div class="form-group">
+    <label asp-for="EmailConfirmed" class="control-label">Подтверждён по почте:</label> 
+    @if (Model.EmailConfirmed)
+    {
+        <span class="badge-primary">Подтверждён</span> 
+    }
+    else
+    {
+        <span class="badge-primary">Не подтверждён</span> 
+    }
+    
+</div>
+
+<div class="form-group">
+    <label class="control-label">Права доступа:</label>
+    @foreach (string role in Model.UserRoles)
+    {
+        <span class="badge-primary">@role</span>
+    }
+</div>

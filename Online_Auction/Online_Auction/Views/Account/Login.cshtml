@@ -1,0 +1,25 @@
+﻿@model Online_Auction.ViewModels.LoginViewModel;
+
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+
+<h2>Вход</h2>
+<form method="post" asp-controller="Account" asp-action="Login">
+    <div asp-validation-summary="ModelOnly"></div>
+    <div>
+        <label asp-for="UserName">Имя юзера</label><br/>
+        <input asp-for="UserName" class="form-control"/>
+        <span asp-validation-for="UserName"></span>
+    </div>
+    <div>
+        <label asp-for="Password">Пароль</label><br/>
+        <input asp-for="Password" class="form-control"/>
+        <span asp-validation-for="Password"></span>
+    </div>
+    <div>
+        <input type="submit" value="Войти" />
+    </div>
+    
+</form>
