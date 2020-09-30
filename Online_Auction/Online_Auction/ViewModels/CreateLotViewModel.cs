@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+using Online_Auction.Models;
 
-namespace Online_Auction.Models
+namespace Online_Auction.ViewModels
 {
-    public class Lot
+    public class CreateLotViewModel
     {
-        public int Id { get; set; }
-        
         [Required]
         [Display(Name = "Название лота")]
         public string Name { get; set; }
@@ -32,14 +32,12 @@ namespace Online_Auction.Models
         [Display(Name = "Дата завершения торгов (в формате dd/MM/yyyy HH)")]
         public DateTime FinishSale { get; set; }
         
-        public string UserId { get; set; }
         public User User { get; set; }
         
-        public List<Comment> Comments { get; set; }
+        //public List<Comment> Comments { get; set; }
+         
+        public int CategoryId { get; set; }
         
-        public int? CategoryId { get; set; }
-        public Category Category { get; set; }
-        
-        public List<Img> Images { get; set; }
+        public IFormFileCollection Images { get; set; }
     }
 }

@@ -31,7 +31,7 @@
             </div> 
             @if (User.IsInRole("admin"))
             {
-                <a  style="margin-right: 10px" asp-controller="Admin" asp-action="Index">Админ панель</a>
+                <a  style="margin-right: 10px" asp-controller="Admin" asp-action="IndexPanel">Админ панель</a>
             }
             @if (User.Identity.IsAuthenticated)
             {

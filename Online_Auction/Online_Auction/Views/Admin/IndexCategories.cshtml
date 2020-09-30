@@ -1,0 +1,27 @@
+﻿@model IEnumerable<Online_Auction.Models.Category>;
+
+@{
+    ViewBag.Title = "Категории";
+    Layout = "_Layout";
+}
+
+<h2>Категории</h2>
+<a asp-action="CreateCategory">Создать категорию</a>
+ 
+<table class="table">
+    <tr><th>Название категории</th><th>Действия</th></tr>
+    @foreach (var category in Model)
+    {
+        <tr>
+            <td><span>@category.Name</span></td>
+            <td>
+                <form asp-action="DeleteCategory" asp-route-id="@category.Id" method="post">
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        Удалить
+                    </button>
+                </form>
+            </td>
+        </tr>   
+    }
+    
+</table>

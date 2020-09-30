@@ -1,9 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Online_Auction.Data;
 using Online_Auction.Models;
 using Online_Auction.Services;
 using Online_Auction.ViewModels;
@@ -15,18 +20,142 @@ namespace Online_Auction.Controllers
     {
         private UserManager<User> _userManager;
         private RoleManager<IdentityRole> _roleManager;
+        private ApplicationContext _context;
+        IWebHostEnvironment _appEnvironment;
 
-        public AdminController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
+        public AdminController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ApplicationContext context
+        , IWebHostEnvironment appEnvironment)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _context = context;
+            _appEnvironment = appEnvironment;
         }
+        
+        public IActionResult IndexPanel() => View();
 
-        public IActionResult Index()
+        public IActionResult IndexLots()//////////////////////////////////////
         {
-            return View(_userManager.Users.ToList());
+            var lots = _context.Lots.Include(i => i.User)
+                .ToList();
+            var images = _context.Images.ToList();
+            var pairs = new Dictionary<Lot, Img>();
+            foreach (var lot in lots)
+            {
+                   pairs.Add(lot, images.First(i => i.LotId == lot.Id));
+            }
+            return View(pairs);
         }
 
+        [HttpGet]
+        public IActionResult CreateLot()
+        {
+            ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
+        { 
+            var users = _userManager.Users;
+            List<string> imgs = new List<string>();
+            foreach (var user in users) 
+            { 
+                if (User.Identity.Name == user.UserName) 
+                { 
+                    viewModel.User = user; 
+                }
+            }
+            
+            if (ModelState.IsValid)
+            {
+                Lot lot = new Lot
+                {
+                    Name = viewModel.Name,
+                    Description = viewModel.Description,
+                    Price = viewModel.Price,
+                    StartSale = viewModel.StartSale,
+                    FinishSale = viewModel.FinishSale,
+                    User = viewModel.User,
+                    CategoryId = viewModel.CategoryId 
+                };
+                _context.Lots.Add(lot);
+                await _context.SaveChangesAsync(); 
+                foreach (var image in viewModel.Images)
+                { 
+                    string path = "/Files/" + image.FileName; 
+                    await using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
+                    {
+                        await image.CopyToAsync(fileStream);
+                    }
+                    Img img = new Img
+                    {
+                        ImgPath = path,
+                        Name = image.Name,
+                        LotId = lot.Id
+                    };
+                    _context.Images.Add(img);
+                    await _context.SaveChangesAsync();
+                }
+                return RedirectToAction("IndexLots");
+            }
+            ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
+            return View(viewModel);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteLot(int id)
+        {
+            var lot = await _context.Lots.FindAsync(id);
+            if (lot != null)
+            {
+                _context.Lots.Remove(lot);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("IndexLots");
+        }
+        
+        /// <summary>
+        /// categories functionality
+        /// </summary> 
+        public IActionResult IndexCategories() => View(_context.Categories.ToList());
+
+        [HttpGet]
+        public IActionResult CreateCategory() => View();
+
+        [HttpPost]
+        public async Task<IActionResult> CreateCategory(Category category)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Categories.Add(category);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("IndexCategories");
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> DeleteCategory(int id) //later maybe add else block
+        {
+            var category = await _context.Categories.FindAsync(id); 
+            if (category != null)
+            {
+                _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction("IndexCategories");
+        }
+    
+        /// <summary>
+        /// user functionality
+        /// </summary> 
+        public IActionResult IndexUsers()
+                {
+                    return View(_userManager.Users.ToList());
+                }
         [HttpGet]
         public IActionResult Create() => View();
         
@@ -132,7 +261,7 @@ namespace Online_Auction.Controllers
                }
                EmailService emailService = new EmailService(); 
                await emailService.SendEmailAsync(user.Email, viewModel.Subject, viewModel.Message);
-               return RedirectToAction("Index");
+               return RedirectToAction("IndexUsers");
         }
         
         [HttpGet]
@@ -178,7 +307,7 @@ namespace Online_Auction.Controllers
                     await _userManager.RemoveFromRolesAsync(user, removedRoles);
                     if (result.Succeeded)
                     {
-                        return RedirectToAction("Index");
+                        return RedirectToAction("IndexUsers");
                     }
                     else
                     {
@@ -196,13 +325,13 @@ namespace Online_Auction.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(string id) //later maybe add else block
         {
-            User user = await _userManager.FindByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
                 await _userManager.DeleteAsync(user);
                 
             }
-            return RedirectToAction("Index");
+            return RedirectToAction("IndexUsers");
         }
     }
 }
