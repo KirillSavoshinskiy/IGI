@@ -1,6 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Online_Auction.Data;
 using Online_Auction.Models;
 using Online_Auction.Services;
 using Online_Auction.ViewModels;
@@ -10,14 +18,17 @@ namespace Online_Auction.Controllers
     public class AccountController: Controller
     {
         private UserManager<User> _userManager;
-        private SignInManager<User> _signInManager;
-        private RoleManager<IdentityRole> _roleManager;
+        private SignInManager<User> _signInManager; 
+        private ApplicationContext _context;
+        IWebHostEnvironment _appEnvironment;
 
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager,  RoleManager<IdentityRole> roleManager)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, 
+            IWebHostEnvironment appEnvironment, ApplicationContext context)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
-            _roleManager = roleManager;
+            _signInManager = signInManager; 
+            _context = context;
+            _appEnvironment = appEnvironment;
         }
 
         [HttpGet]
@@ -63,6 +74,8 @@ namespace Online_Auction.Controllers
         {
             User user = await _userManager.FindByNameAsync(name);
             var userRoles = await _userManager.GetRolesAsync(user);
+            var userLots = await _context.Lots.Where(i => i.UserId == user.Id)
+                .Include(c => c.Category).Include(i => i.Images).ToListAsync(); 
             if (user == null)
             {
                 return NotFound();
@@ -73,9 +86,89 @@ namespace Online_Auction.Controllers
                 UserName = user.UserName,
                 Email = user.Email,
                 EmailConfirmed = user.EmailConfirmed,
-                UserRoles = userRoles
+                UserRoles = userRoles,
+                Lots = userLots
             };
             return View(viewModel);
+        }
+        
+        [HttpGet]
+        public IActionResult CreateLot()
+        {
+            ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
+        { 
+            var users = _userManager.Users;
+            List<string> imgs = new List<string>();
+            foreach (var user in users) 
+            { 
+                if (User.Identity.Name == user.UserName) 
+                { 
+                    viewModel.User = user; 
+                }
+            }
+
+            if (viewModel.StartSale < DateTime.Now)
+            {
+                ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
+            }
+
+            if (viewModel.StartSale > viewModel.FinishSale)
+            {
+                ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт" );
+            }
+            
+            if (ModelState.IsValid)
+            {
+                var lot = new Lot
+                {
+                    Name = viewModel.Name,
+                    Description = viewModel.Description,
+                    Price = viewModel.Price,
+                    StartSale = viewModel.StartSale,
+                    FinishSale = viewModel.FinishSale,
+                    User = viewModel.User,
+                    CategoryId = viewModel.CategoryId 
+                };
+                _context.Lots.Add(lot);
+                await _context.SaveChangesAsync(); 
+                foreach (var image in viewModel.Images)
+                { 
+                    var path = "/Files/" + image.FileName; 
+                    await using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
+                    {
+                        await image.CopyToAsync(fileStream);
+                    }
+                    var img = new Img
+                    {
+                        ImgPath = path,
+                        Name = image.Name,
+                        LotId = lot.Id
+                    };
+                    _context.Images.Add(img);
+                    await _context.SaveChangesAsync();
+                }
+                return RedirectToAction("Index", "Home");////добавить потом переадресацию на лот
+            } 
+            ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
+            return View(viewModel);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> DeleteLot(int id)
+        {
+            var lot = await _context.Lots.FindAsync(id);
+            if (lot != null)
+            {
+                _context.Lots.Remove(lot);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Profile");
         }
 
         [HttpGet]

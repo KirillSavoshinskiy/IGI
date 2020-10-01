@@ -1,0 +1,89 @@
+﻿@model Online_Auction.Models.Lot;
+
+@{
+    ViewBag.Title = "Лот";
+    Layout = "_Layout";
+}
+
+<h2>Лот: @Model.Name </h2>
+
+<div class="my_box3">
+    <div class="box-shadow">
+        @for (var i = 0; i < Model.Images.Count; i++)
+        {
+             <img src="@Model.Images[i].ImgPath" alt="" width="250" height="170">
+        } 
+      
+    </div>
+    <div class="box-shadow"> 
+        <div class="bid_panel">
+            <div class="padd10">
+
+                <ul class="auction-details2">
+                    <li>
+                        <h3>Текущая ставка:</h3>
+                        <p id="content-bid" style="color: black;">@Model.Price</p>
+                    </li>
+                </ul>
+
+            </div>
+        </div>
+        <div>
+            <div class="padd10">
+
+                <form method="post" asp-action="IncreasePrice" asp-route-id="@Model.Id">
+                    <ul class="auction-details2">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <h3>Ваша максимальная ставка:</h3>
+                        <p>
+                            <input type="number" name="price" id="bids_val" size="13">
+                        </p> 
+                        <div class="float:left;">
+                            <input class="my-buttons2" type="submit" id="place_bid" name="bid_now" value="Сделать ставку">
+                        </div> 
+                    </ul>
+                </form>
+
+            </div>
+        </div>
+        
+        <div class="row border-bottom"> 
+            <div class="col-xs-5 col-sm-5 col-lg-5 font-weight-bold">
+                <img src="/Icons/cal.png" width="20" height="20">
+                &nbsp;&nbsp;Лот №:
+            </div>
+            <div class="col-xs-7 col-sm-7 col-lg-7">@Model.Id</div>
+        </div>
+        
+        @* <div class="row border-bottom"> *@
+        @*     <div class="col-xs-5 col-sm-5 col-lg-5 font-weight-bold"><img src="https://belauction.by/wp-content/themes/AuctionTheme3/images/location.png" width="20" height="20">&nbsp;&nbsp;&nbsp;Местонахождение:</div> *@
+        @*     <div class="col-xs-7 col-sm-7 col-lg-7"> *@
+        @*         <a href="https://belauction.by/location/vitebskaya-oblast/" rel="tag">Витебская область</a> *@
+        @*     </div> *@
+        @* </div> *@
+        <div class="row border-bottom">
+            <div class="col-xs-5 col-sm-5 col-lg-5 font-weight-bold">
+                <img src="/Icons/overview_icon.png" width="20" height="20">
+                &nbsp;&nbsp;Открытие торгов:
+            </div>
+            <div class="col-xs-7 col-sm-7 col-lg-7">@Model.StartSale</div>
+        </div>
+        <div class="row border-bottom">
+            <div class="col-xs-5 col-sm-5 col-lg-5 font-weight-bold">
+                <img src="/Icons/overview_icon2.png" width="20" height="20">
+                &nbsp;&nbsp;Завершение торгов:
+            </div>
+            <div class="col-xs-7 col-sm-7 col-lg-7">@Model.FinishSale</div>
+        </div>
+        @* <div class="row border-bottom"> *@
+        @*     <div class="col-xs-5 col-sm-5 col-lg-5 font-weight-bold"> *@
+        @*         <img src="https://belauction.by/wp-content/themes/AuctionTheme3/images/clock.png" width="20" height="20"> *@
+        @*         &nbsp;&nbsp;Осталось: *@
+        @*     </div> *@
+        @*     <div class="col-xs-7 col-sm-7 col-lg-7"> *@
+        @*       тут время оставшееся *@
+        @*      </div> *@
+        @* </div> *@
+     </div>
+</div>
+        

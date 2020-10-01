@@ -12,7 +12,7 @@
     @foreach (var lot in Model)
     {
         <tr>
-            <td><span>@lot.Key.Name</span></td>
+            <td><a class="btn badge-primary" asp-action="ProfileLot" asp-route-id="@lot.Key.Id">@lot.Key.Name</a></td>
             <td><img style="width: 50px; height: 40px" src="@lot.Value.ImgPath"/></td>
             <td><span>@lot.Key.User.UserName</span></td>
             <td>

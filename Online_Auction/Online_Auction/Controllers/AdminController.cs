@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -66,10 +67,20 @@ namespace Online_Auction.Controllers
                     viewModel.User = user; 
                 }
             }
+
+            if (viewModel.StartSale < DateTime.Now)
+            {
+                ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
+            }
+
+            if (viewModel.StartSale > viewModel.FinishSale)
+            {
+                ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт" );
+            }
             
             if (ModelState.IsValid)
             {
-                Lot lot = new Lot
+                var lot = new Lot
                 {
                     Name = viewModel.Name,
                     Description = viewModel.Description,
@@ -83,12 +94,12 @@ namespace Online_Auction.Controllers
                 await _context.SaveChangesAsync(); 
                 foreach (var image in viewModel.Images)
                 { 
-                    string path = "/Files/" + image.FileName; 
+                    var path = "/Files/" + image.FileName; 
                     await using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
                     {
                         await image.CopyToAsync(fileStream);
                     }
-                    Img img = new Img
+                    var img = new Img
                     {
                         ImgPath = path,
                         Name = image.Name,
@@ -98,12 +109,35 @@ namespace Online_Auction.Controllers
                     await _context.SaveChangesAsync();
                 }
                 return RedirectToAction("IndexLots");
-            }
+            } 
             ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
             return View(viewModel);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ProfileLot(int id)
+        {
+            var lot = await _context.Lots.Where(l => l.Id == id).Include(i => i.User)
+                .Include(img => img.Images).Include(c => c.Category).FirstAsync();
+            return View(lot);
+        }
 
+        [HttpPost]
+        public async Task IncreasePrice(int id, decimal price)
+        {
+            var lot = await _context.Lots.FindAsync(id);
+            if (price > lot.Price)
+            {
+                lot.Price = price;
+                _context.Lots.Update(lot);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                ModelState.AddModelError("", "Введённая ставка ниже прежней");
+            }
+        }
+        
         [HttpPost]
         public async Task<IActionResult> DeleteLot(int id)
         {
@@ -220,22 +254,24 @@ namespace Online_Auction.Controllers
         public async Task<IActionResult> Profile(string id)
         {
             User user = await _userManager.FindByIdAsync(id);
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var userLots = await _context.Lots.Where(i => i.UserId == user.Id)
+                .Include(c => c.Category).Include(i => i.Images).ToListAsync(); 
+
             if (user == null)
             {
                 return NotFound();
             }
-            var userRoles = await _userManager.GetRolesAsync(user);
-            var allRoles = _roleManager.Roles.ToList();
-            EditUserViewModel model = new EditUserViewModel
+            ProfileViewModel viewModel = new ProfileViewModel
             {
-                Id = user.Id, 
-                UserName = user.UserName, 
+                UserName = user.UserName,
                 Email = user.Email,
+                EmailConfirmed = user.EmailConfirmed,
                 UserRoles = userRoles,
-                AllRoles = allRoles
+                Lots = userLots
             };
             
-            return View(model);
+            return View(viewModel);
         }
 
         [HttpGet]

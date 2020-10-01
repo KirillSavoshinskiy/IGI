@@ -24,7 +24,7 @@ namespace Online_Auction.Helpers
 
             if (await userManager.FindByNameAsync(adminName) == null)
             {
-                var admin = new User {UserName = adminName, Email = adminEmail};
+                var admin = new User {UserName = adminName, Email = adminEmail, EmailConfirmed = true};
                 var result = await userManager.CreateAsync(admin, adminPassword);
                 if (result.Succeeded)
                 {
