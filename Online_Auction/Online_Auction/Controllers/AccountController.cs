@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,7 @@ using Online_Auction.ViewModels;
 
 namespace Online_Auction.Controllers
 {
+     
     public class AccountController: Controller
     {
         private UserManager<User> _userManager;
@@ -72,6 +74,10 @@ namespace Online_Auction.Controllers
         [HttpGet]
         public async Task<IActionResult> Profile(string name)
         {
+            if (User.Identity.Name != name)
+            {
+                return Content("Вы пытаетесь войти в чужой профиль");
+            }
             User user = await _userManager.FindByNameAsync(name);
             var userRoles = await _userManager.GetRolesAsync(user);
             var userLots = await _context.Lots.Where(i => i.UserId == user.Id)
@@ -93,6 +99,7 @@ namespace Online_Auction.Controllers
         }
         
         [HttpGet]
+        [Authorize]
         public IActionResult CreateLot()
         {
             ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
@@ -100,6 +107,7 @@ namespace Online_Auction.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
         { 
             var users = _userManager.Users;
@@ -160,10 +168,14 @@ namespace Online_Auction.Controllers
         
         [HttpGet]
         public IActionResult EditLot(int id)
-        {
+        { 
             var lot = _context.Lots.Include(i => i.User)
                 .Include(img => img.Images) 
                 .First(i => i.Id == id);
+            if (User.Identity.Name != lot.User.UserName)
+            {
+                return Content("Вы пытаетесь войти в чужой профиль");
+            }
             if (lot.StartSale < DateTime.Now)
             {
                 return Content("Вы не можете изменять лот, так как торги начались");
@@ -201,6 +213,10 @@ namespace Online_Auction.Controllers
             if (ModelState.IsValid)
             {
                 var lot = await _context.Lots.FindAsync(viewModel.Id);
+                if (User.Identity.Name != lot.User.UserName)
+                {
+                    return Content("Вы пытаетесь войти в чужой профиль");
+                }
                 lot.Name = viewModel.Name;
                 lot.Description = viewModel.Description;
                 lot.Price = viewModel.Price;
@@ -216,9 +232,14 @@ namespace Online_Auction.Controllers
         }
         
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> DeleteLot(int id)
         {
             var lot = await _context.Lots.FindAsync(id);
+            if (User.Identity.Name != lot.User.UserName)
+            {
+                return Content("Вы пытаетесь войти в чужой профиль");
+            }
             if (lot != null)
             {
                 _context.Lots.Remove(lot);
@@ -229,10 +250,18 @@ namespace Online_Auction.Controllers
         }
         
         [HttpGet]
+        [Authorize]
         public IActionResult ProfileLot(int id)
         {
-            return View(_context.Lots.Where(i => i.Id == id).Include(img => img.Images)
-                .Include(u => u.User).Include(c => c.Category).First());
+            var lot = _context.Lots.Where(i => i.Id == id)
+                .Include(img => img.Images)
+                .Include(u => u.User)
+                .Include(c => c.Category).First();
+            if (User.Identity.Name != lot.User.UserName)
+            {
+                return Content("Вы пытаетесь войти в чужой профиль");
+            }
+            return View(lot);
         }
 
         [HttpGet]

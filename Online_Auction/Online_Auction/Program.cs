@@ -10,6 +10,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Online_Auction.Helpers;
 using Online_Auction.Models;
+using Serilog;
+using Serilog.Events;
 
 namespace Online_Auction
 {
@@ -18,6 +20,20 @@ namespace Online_Auction
         public static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
+            var config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .WriteTo.File("Logs\\log-all.txt")
+                .WriteTo.Logger(lc => lc
+                    .Filter.ByIncludingOnly(le => le.Level == LogEventLevel.Error)
+                    .WriteTo.File("Logs\\log-error.txt"))
+                .WriteTo.Logger(lc => lc
+                    .Filter.ByIncludingOnly(le => le.Level == LogEventLevel.Error)
+                    .WriteTo.Console()) 
+                .CreateLogger();
 
             using (var scope = host.Services.CreateScope())
             {
@@ -27,19 +43,23 @@ namespace Online_Auction
                     var userManager = services.GetRequiredService<UserManager<User>>();
                     var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     await AdminRoleInitializer.InitializeRolesAdmin(userManager, rolesManager);
+                    Log.Information("Application Starting.");
+                    host.Run();
                 }
                 catch (Exception ex)
                 {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred while seeding the database.");
+                    Log.Fatal(ex, "The Application failed to start."); ;
+                }
+                finally
+                {
+                    Log.CloseAndFlush();
                 }
             }
-            
-            host.Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
 }
