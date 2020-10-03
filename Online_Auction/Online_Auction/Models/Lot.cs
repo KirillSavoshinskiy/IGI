@@ -20,6 +20,8 @@ namespace Online_Auction.Models
         [Display(Name = "Стартовая цена")]
         public decimal Price { get; set; }
         
+        public string UserPriceId { get; set; }
+        
         [Required]
         [DataType(DataType.DateTime)]
         [DisplayFormat(DataFormatString="{0:dd-MM-yyyy HH}", ApplyFormatInEditMode=true)]

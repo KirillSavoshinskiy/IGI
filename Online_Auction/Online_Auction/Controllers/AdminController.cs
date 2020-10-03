@@ -16,7 +16,7 @@ using Online_Auction.ViewModels;
 
 namespace Online_Auction.Controllers
 {
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = "admin")] 
     public class AdminController: Controller
     {
         private UserManager<User> _userManager;
@@ -57,17 +57,10 @@ namespace Online_Auction.Controllers
 
         [HttpPost]
         public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
-        { 
-            var users = _userManager.Users;
+        {  
             List<string> imgs = new List<string>();
-            foreach (var user in users) 
-            { 
-                if (User.Identity.Name == user.UserName) 
-                { 
-                    viewModel.User = user; 
-                }
-            }
-
+            viewModel.User = _userManager.Users.First(i => i.UserName == User.Identity.Name); 
+           
             if (viewModel.StartSale < DateTime.Now)
             {
                 ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
@@ -123,18 +116,22 @@ namespace Online_Auction.Controllers
         }
 
         [HttpPost]
-        public async Task IncreasePrice(int id, decimal price)
+        public async Task<IActionResult> IncreasePrice(int id, decimal price)
         {
             var lot = await _context.Lots.FindAsync(id);
+            var user = _userManager.Users.First(i => i.UserName == User.Identity.Name);
+             
             if (price > lot.Price)
             {
                 lot.Price = price;
+                lot.UserPriceId = user.Id;
                 _context.Lots.Update(lot);
                 await _context.SaveChangesAsync();
+                return RedirectToAction("ProfileLot", "Admin", new {id = lot.Id});
             }
             else
             {
-                ModelState.AddModelError("", "Введённая ставка ниже прежней");
+                 return Content("Введённая ставка ниже прежней");
             }
         }
         
