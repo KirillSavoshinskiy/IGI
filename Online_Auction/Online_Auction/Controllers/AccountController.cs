@@ -158,6 +158,63 @@ namespace Online_Auction.Controllers
             return View(viewModel);
         }
         
+        [HttpGet]
+        public IActionResult EditLot(int id)
+        {
+            var lot = _context.Lots.Include(i => i.User)
+                .Include(img => img.Images) 
+                .First(i => i.Id == id);
+            if (lot.StartSale < DateTime.Now)
+            {
+                return Content("Вы не можете изменять лот, так как торги начались");
+            }
+
+            if (lot.FinishSale < DateTime.Now)
+            {
+                return Content("Вы не можете изменять лот, так как торги закончились");
+            }
+            EditLotViewModel viewModel = new EditLotViewModel
+            {
+                Id = lot.Id,
+                Name = lot.Name,
+                Description = lot.Description,
+                Price = lot.Price,
+                StartSale = lot.StartSale,
+                FinishSale = lot.FinishSale,
+                CategoryId = lot.CategoryId
+            };
+            ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditLot(EditLotViewModel viewModel)
+        {
+            if (viewModel.StartSale < DateTime.Now)
+            {
+                ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
+            }
+            if (viewModel.StartSale > viewModel.FinishSale)
+            {
+                ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт" );
+            }
+            if (ModelState.IsValid)
+            {
+                var lot = await _context.Lots.FindAsync(viewModel.Id);
+                lot.Name = viewModel.Name;
+                lot.Description = viewModel.Description;
+                lot.Price = viewModel.Price;
+                lot.StartSale = viewModel.StartSale;
+                lot.FinishSale = viewModel.FinishSale;
+                lot.CategoryId = viewModel.CategoryId;
+                _context.Lots.Update(lot);
+                await _context.SaveChangesAsync();
+                return RedirectToAction("Profile", "Account");
+            }
+            ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
+            return View(viewModel);
+        }
+        
         [HttpPost]
         public async Task<IActionResult> DeleteLot(int id)
         {
@@ -169,6 +226,13 @@ namespace Online_Auction.Controllers
             }
 
             return RedirectToAction("Profile");
+        }
+        
+        [HttpGet]
+        public IActionResult ProfileLot(int id)
+        {
+            return View(_context.Lots.Where(i => i.Id == id).Include(img => img.Images)
+                .Include(u => u.User).Include(c => c.Category).First());
         }
 
         [HttpGet]

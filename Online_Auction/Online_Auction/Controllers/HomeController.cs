@@ -39,9 +39,14 @@ namespace Online_Auction.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> IncreasePrice(int id, decimal price, string userName)
+        public async Task<IActionResult> IncreasePrice(int id, decimal price)
         {
             var lot = await _context.Lots.FindAsync(id);
+            var owner = await _userManager.FindByIdAsync(lot.UserId);
+            if (owner.UserName == User.Identity.Name)
+            {
+                return Content("Вы не можете делать ставки на свой лот");
+            }
             var user = _userManager.Users.First(i => i.UserName == User.Identity.Name);
              
             if (price > lot.Price)

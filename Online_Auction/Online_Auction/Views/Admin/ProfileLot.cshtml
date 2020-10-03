@@ -1,89 +1,77 @@
 ﻿@model Online_Auction.Models.Lot;
 
 @{
-    ViewBag.Title = "Лот";
+    ViewBag.Title = "Информация о лоте";
     Layout = "_Layout";
 }
 
-<h2>Лот: @Model.Name </h2>
-
-<div class="my_box3">
-    <div class="box-shadow">
-        @for (var i = 0; i < Model.Images.Count; i++)
+<h2>Информация о лоте</h2>
+<div>
+    <div class="row">
+        @foreach (var img in Model.Images)
         {
-             <img src="@Model.Images[i].ImgPath" alt="" width="250" height="170">
-        } 
-      
+            <div class="p-div-img">
+                <img src="@img.ImgPath" alt="" class="p-img"/>
+            </div>
+        }
     </div>
-    <div class="box-shadow"> 
-        <div class="bid_panel">
-            <div class="padd10">
-
-                <ul class="auction-details2">
-                    <li>
-                        <h3>Текущая ставка:</h3>
-                        <p id="content-bid" style="color: black;">@Model.Price</p>
-                    </li>
-                </ul>
-
-            </div>
+    <div class="row">
+        <div class="col box-shadow"> 
+            <ul>
+                <li style="list-style-type: none;"><h6>@Model.Name</h6></li>
+                <li style="list-style-type: none;"><span>Лот № @Model.Id</span></li>
+                <li style="list-style-type: none;"><span>Продавец: @Model.User.UserName</span></li>
+                <li style="list-style-type: none;"><span>В категории: @Model.Category.Name</span></li>
+                <li style="list-style-type: none;">
+                    <img src="/Icons/cal.png" alt="price" width="15" height="15" class="icon">
+                    <h6 style=" float: left; margin-top: 2px; margin-right: 2px;">Старт торгов:</h6>
+                    <p>@Model.StartSale</p>
+                </li>
+                <li style="list-style-type: none;">
+                    <img src="/Icons/cal2.png" alt="price" width="15" height="15" class="icon">
+                    <h6 style=" float: left; margin-top: 2px; margin-right: 2px;">Конец торгов:</h6>
+                    <p>@Model.FinishSale</p>
+                </li>
+            </ul>  
         </div>
-        <div>
-            <div class="padd10">
-
-                <form method="post" asp-action="IncreasePrice" asp-route-id="@Model.Id">
-                    <ul class="auction-details2">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        <h3>Ваша максимальная ставка:</h3>
-                        <p>
-                            <input type="number" name="price" id="bids_val" size="13">
-                        </p> 
-                        <div class="float:left;">
-                            <input class="my-buttons2" type="submit" id="place_bid" name="bid_now" value="Сделать ставку">
-                        </div> 
-                    </ul>
-                </form>
-
-            </div>
+        <div class="col box-shadow">
+            <li style="list-style-type: none;">
+                <img src="/Icons/price.png" alt="price" width="15" height="15" class="icon">
+                <h5 style=" float: left; margin-right: 2px;">Текущая цена:</h5>
+                <p>@Model.Price BYN</p>
+            </li>
+            @if (User.Identity.IsAuthenticated && (Model.StartSale <= DateTime.Now && Model.FinishSale > DateTime.Now))
+            {
+                <li style="list-style-type: none;">
+                    <h5 style="margin-top: 2px; margin-right: 2px;">Введите свою ставку:</h5>
+                    <form method="post" asp-action="IncreasePrice" asp-route-id="@Model.Id">
+                        <input type="number" name="price" style="border-radius: 5px;"/>
+                        <input type="submit" value="Поставить" class="btn badge-primary"/>
+                    </form>
+                </li>
+            }
+            else if (!User.Identity.IsAuthenticated)
+            {
+                <h5 style="margin-top: 2px; margin-right: 2px;">Вы не авторизованы и не можете делать ставки</h5>
+            }
+            else if (Model.FinishSale < DateTime.Now)
+            {
+                <h5 style="margin-top: 2px; margin-right: 2px;">Торги завершились</h5>
+            }
+            else if (Model.StartSale > DateTime.Now)
+            {
+                <h5 style="margin-top: 2px; margin-right: 2px;">Торги ещё не начались</h5>
+            }
         </div>
-        
-        <div class="row border-bottom"> 
-            <div class="col-xs-5 col-sm-5 col-lg-5 font-weight-bold">
-                <img src="/Icons/cal.png" width="20" height="20">
-                &nbsp;&nbsp;Лот №:
-            </div>
-            <div class="col-xs-7 col-sm-7 col-lg-7">@Model.Id</div>
+    </div>
+    <div class="row">
+        <div class="col box-shadow">
+            <h5>Описание лота:</h5>
+            <text>@Model.Description</text>
         </div>
-        
-        @* <div class="row border-bottom"> *@
-        @*     <div class="col-xs-5 col-sm-5 col-lg-5 font-weight-bold"><img src="https://belauction.by/wp-content/themes/AuctionTheme3/images/location.png" width="20" height="20">&nbsp;&nbsp;&nbsp;Местонахождение:</div> *@
-        @*     <div class="col-xs-7 col-sm-7 col-lg-7"> *@
-        @*         <a href="https://belauction.by/location/vitebskaya-oblast/" rel="tag">Витебская область</a> *@
-        @*     </div> *@
-        @* </div> *@
-        <div class="row border-bottom">
-            <div class="col-xs-5 col-sm-5 col-lg-5 font-weight-bold">
-                <img src="/Icons/overview_icon.png" width="20" height="20">
-                &nbsp;&nbsp;Открытие торгов:
-            </div>
-            <div class="col-xs-7 col-sm-7 col-lg-7">@Model.StartSale</div>
+        <div class="col box-shadow">
+            <h5>Комментарии:</h5>
         </div>
-        <div class="row border-bottom">
-            <div class="col-xs-5 col-sm-5 col-lg-5 font-weight-bold">
-                <img src="/Icons/overview_icon2.png" width="20" height="20">
-                &nbsp;&nbsp;Завершение торгов:
-            </div>
-            <div class="col-xs-7 col-sm-7 col-lg-7">@Model.FinishSale</div>
-        </div>
-        @* <div class="row border-bottom"> *@
-        @*     <div class="col-xs-5 col-sm-5 col-lg-5 font-weight-bold"> *@
-        @*         <img src="https://belauction.by/wp-content/themes/AuctionTheme3/images/clock.png" width="20" height="20"> *@
-        @*         &nbsp;&nbsp;Осталось: *@
-        @*     </div> *@
-        @*     <div class="col-xs-7 col-sm-7 col-lg-7"> *@
-        @*       тут время оставшееся *@
-        @*      </div> *@
-        @* </div> *@
-     </div>
+    </div>
 </div>
         

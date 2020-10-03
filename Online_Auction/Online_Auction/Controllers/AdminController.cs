@@ -35,17 +35,11 @@ namespace Online_Auction.Controllers
         
         public IActionResult IndexPanel() => View();
 
-        public IActionResult IndexLots()//////////////////////////////////////
-        {
-            var lots = _context.Lots.Include(i => i.User)
-                .ToList();
-            var images = _context.Images.ToList();
-            var pairs = new Dictionary<Lot, Img>();
-            foreach (var lot in lots)
-            {
-                   pairs.Add(lot, images.First(i => i.LotId == lot.Id));
-            }
-            return View(pairs);
+        public IActionResult IndexLots() 
+        { 
+            return View( _context.Lots.Include(i => i.User)
+                .Include(img => img.Images)
+                .ToList());
         }
 
         [HttpGet]
@@ -57,8 +51,7 @@ namespace Online_Auction.Controllers
 
         [HttpPost]
         public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
-        {  
-            List<string> imgs = new List<string>();
+        {   
             viewModel.User = _userManager.Users.First(i => i.UserName == User.Identity.Name); 
            
             if (viewModel.StartSale < DateTime.Now)
@@ -108,6 +101,63 @@ namespace Online_Auction.Controllers
         }
 
         [HttpGet]
+        public IActionResult EditLot(int id)
+        {
+            var lot = _context.Lots.Include(i => i.User)
+                .Include(img => img.Images) 
+                .First(i => i.Id == id);
+            if (lot.StartSale < DateTime.Now)
+            {
+                return Content("Вы не можете изменять лот, так как торги начались");
+            }
+
+            if (lot.FinishSale < DateTime.Now)
+            {
+                return Content("Вы не можете изменять лот, так как торги закончились");
+            }
+            EditLotViewModel viewModel = new EditLotViewModel
+            {
+                Id = lot.Id,
+                Name = lot.Name,
+                Description = lot.Description,
+                Price = lot.Price,
+                StartSale = lot.StartSale,
+                FinishSale = lot.FinishSale,
+                CategoryId = lot.CategoryId
+            };
+            ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditLot(EditLotViewModel viewModel)
+        {
+            if (viewModel.StartSale < DateTime.Now)
+            {
+                ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
+            }
+            if (viewModel.StartSale > viewModel.FinishSale)
+            {
+                ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт" );
+            }
+            if (ModelState.IsValid)
+            {
+                var lot = await _context.Lots.FindAsync(viewModel.Id);
+                lot.Name = viewModel.Name;
+                lot.Description = viewModel.Description;
+                lot.Price = viewModel.Price;
+                lot.StartSale = viewModel.StartSale;
+                lot.FinishSale = viewModel.FinishSale;
+                lot.CategoryId = viewModel.CategoryId;
+                _context.Lots.Update(lot);
+                await _context.SaveChangesAsync();
+                return RedirectToAction("IndexLots", "Admin");
+            }
+            ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
+            return View(viewModel);
+        }
+        
+        [HttpGet]
         public async Task<IActionResult> ProfileLot(int id)
         {
             var lot = await _context.Lots.Where(l => l.Id == id).Include(i => i.User)
@@ -119,6 +169,11 @@ namespace Online_Auction.Controllers
         public async Task<IActionResult> IncreasePrice(int id, decimal price)
         {
             var lot = await _context.Lots.FindAsync(id);
+            var owner = await _userManager.FindByIdAsync(lot.UserId);
+            if (owner.UserName == User.Identity.Name)
+            {
+                return Content("Вы не можете делать ставки на свой лот");
+            }
             var user = _userManager.Users.First(i => i.UserName == User.Identity.Name);
              
             if (price > lot.Price)
@@ -129,10 +184,7 @@ namespace Online_Auction.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction("ProfileLot", "Admin", new {id = lot.Id});
             }
-            else
-            {
-                 return Content("Введённая ставка ниже прежней");
-            }
+            return Content("Введённая ставка ниже прежней");
         }
         
         [HttpPost]
@@ -184,9 +236,9 @@ namespace Online_Auction.Controllers
         /// user functionality
         /// </summary> 
         public IActionResult IndexUsers()
-                {
-                    return View(_userManager.Users.ToList());
-                }
+        {
+            return View(_userManager.Users.ToList());
+        }
         [HttpGet]
         public IActionResult Create() => View();
         
@@ -248,7 +300,7 @@ namespace Online_Auction.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Profile(string id)
+        public async Task<IActionResult> ProfileUser(string id)
         {
             User user = await _userManager.FindByIdAsync(id);
             var userRoles = await _userManager.GetRolesAsync(user);
@@ -327,8 +379,7 @@ namespace Online_Auction.Controllers
                 User user = await _userManager.FindByIdAsync(viewModel.Id);
                 if (user != null)
                 {
-                    var userRoles = await _userManager.GetRolesAsync(user);
-                    var allRoles = _roleManager.Roles.ToList();
+                    var userRoles = await _userManager.GetRolesAsync(user); 
                     var addedRoles = roles.Except(userRoles);
                     var removedRoles = userRoles.Except(roles);
                     
@@ -342,13 +393,12 @@ namespace Online_Auction.Controllers
                     {
                         return RedirectToAction("IndexUsers");
                     }
-                    else
+
+                    foreach (var item in result.Errors)
                     {
-                        foreach (var item in result.Errors)
-                        {
-                            ModelState.AddModelError("", item.Description);
-                        }
+                        ModelState.AddModelError("", item.Description);
                     }
+                    
                 }
             }
 

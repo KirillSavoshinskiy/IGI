@@ -1,4 +1,4 @@
-﻿@model Dictionary<Online_Auction.Models.Lot, Online_Auction.Models.Img>;
+﻿@model IEnumerable<Online_Auction.Models.Lot>;
 
 @{
     ViewBag.Title = "Все лоты";
@@ -12,11 +12,12 @@
     @foreach (var lot in Model)
     {
         <tr>
-            <td><a class="btn badge-primary" asp-action="ProfileLot" asp-route-id="@lot.Key.Id">@lot.Key.Name</a></td>
-            <td><img style="width: 50px; height: 40px" src="@lot.Value.ImgPath"/></td>
-            <td><span>@lot.Key.User.UserName</span></td>
+            <td><a class="btn badge-primary" asp-action="ProfileLot" asp-route-id="@lot.Id">@lot.Name</a></td>
+            <td><img style="width: 50px; height: 40px" src="@lot.Images.First().ImgPath"/></td>
+            <td><span>@lot.User.UserName</span></td>
             <td>
-                <form asp-action="DeleteLot" asp-route-id="@lot.Key.Id" method="post">
+                <a class="btn alert-primary" asp-action="EditLot" asp-route-id="@lot.Id">Изменить</a>
+                <form asp-action="DeleteLot" asp-route-id="@lot.Id" method="post">
                     <button type="submit" class="btn btn-sm btn-danger">
                         Удалить
                     </button>
