@@ -4,8 +4,8 @@ using MimeKit;
 
 namespace Online_Auction.Services
 {
-    public class EmailService
-    {
+    public class EmailService: IEmailService
+    { 
         public async Task SendEmailAsync(string email, string subject, string mess)
         {
             var emailMess = new MimeMessage();
@@ -16,7 +16,7 @@ namespace Online_Auction.Services
             {
                 Text = mess
             };
-
+        
             using (var client = new SmtpClient())
             {
                 await client.ConnectAsync("smtp.gmail.com", 587, false);//afrter change ssl true

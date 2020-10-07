@@ -23,14 +23,19 @@ namespace Online_Auction.Controllers
         private SignInManager<User> _signInManager; 
         private ApplicationContext _context;
         IWebHostEnvironment _appEnvironment;
+        private IEmailService _emailService;
+        private ISaveImage _saveImage;
 
         public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, 
-            IWebHostEnvironment appEnvironment, ApplicationContext context)
+            IWebHostEnvironment appEnvironment, ApplicationContext context, IEmailService emailService,
+            ISaveImage saveImage)
         {
             _userManager = userManager;
             _signInManager = signInManager; 
             _context = context;
             _appEnvironment = appEnvironment;
+            _emailService = emailService;
+            _saveImage = saveImage;
         }
 
         [HttpGet]
@@ -55,8 +60,7 @@ namespace Online_Auction.Controllers
                         "Account",
                         new {userId = user.Id, token = confToken},
                         protocol: HttpContext.Request.Scheme);
-                    EmailService emailService = new EmailService();
-                    await emailService.SendEmailAsync(viewModel.Email, "Подтверждение регистрации",
+                    await _emailService.SendEmailAsync(viewModel.Email, "Подтверждение регистрации",
                         $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confUrl}'>link</a>");
                     return Content("Для завершения регистрации проверьте электронную почту и перейдите по ссылке, указанной в письме");
                 }
@@ -143,24 +147,9 @@ namespace Online_Auction.Controllers
                     CategoryId = viewModel.CategoryId 
                 };
                 _context.Lots.Add(lot);
-                await _context.SaveChangesAsync(); 
-                foreach (var image in viewModel.Images)
-                { 
-                    var path = "/Files/" + image.FileName; 
-                    await using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
-                    {
-                        await image.CopyToAsync(fileStream);
-                    }
-                    var img = new Img
-                    {
-                        ImgPath = path,
-                        Name = image.Name,
-                        LotId = lot.Id
-                    };
-                    _context.Images.Add(img);
-                    await _context.SaveChangesAsync();
-                }
-                return RedirectToAction("Index", "Home");////добавить потом переадресацию на лот
+                await _context.SaveChangesAsync();
+                await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot); 
+                return RedirectToAction("Index", "Home"); 
             } 
             ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
             return View(viewModel);

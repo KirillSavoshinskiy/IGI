@@ -23,14 +23,18 @@ namespace Online_Auction.Controllers
         private RoleManager<IdentityRole> _roleManager;
         private ApplicationContext _context;
         IWebHostEnvironment _appEnvironment;
+        private IEmailService _emailService;
+        private ISaveImage _saveImage;
 
         public AdminController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ApplicationContext context
-        , IWebHostEnvironment appEnvironment)
+        , IWebHostEnvironment appEnvironment, IEmailService emailService, ISaveImage saveImage)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _context = context;
             _appEnvironment = appEnvironment;
+            _emailService = emailService;
+            _saveImage = saveImage;
         }
         
         public IActionResult IndexPanel() => View();
@@ -78,22 +82,7 @@ namespace Online_Auction.Controllers
                 };
                 _context.Lots.Add(lot);
                 await _context.SaveChangesAsync(); 
-                foreach (var image in viewModel.Images)
-                { 
-                    var path = "/Files/" + image.FileName; 
-                    await using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
-                    {
-                        await image.CopyToAsync(fileStream);
-                    }
-                    var img = new Img
-                    {
-                        ImgPath = path,
-                        Name = image.Name,
-                        LotId = lot.Id
-                    };
-                    _context.Images.Add(img);
-                    await _context.SaveChangesAsync();
-                }
+                await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot);  
                 return RedirectToAction("IndexLots");
             } 
             ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
@@ -257,18 +246,15 @@ namespace Online_Auction.Controllers
                         "ConfirmEmail",
                         "Account",
                         new {userId = user.Id, token = confToken},
-                        protocol: HttpContext.Request.Scheme);
-                    EmailService emailService = new EmailService();
-                    await emailService.SendEmailAsync(viewModel.Email, "Подтверждение регистрации",
+                        protocol: HttpContext.Request.Scheme); 
+                    await _emailService.SendEmailAsync(viewModel.Email, "Подтверждение регистрации",
                         $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confUrl}'>link</a>");
                     return Content("Для завершения регистрации проверьте электронную почту и перейдите по ссылке, указанной в письме");
                 }
-                else
+
+                foreach (var error in result.Errors)
                 {
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError("", error.Description);
-                    }
+                    ModelState.AddModelError("", error.Description);
                 }
             }
             return View(viewModel);
@@ -292,11 +278,8 @@ namespace Online_Auction.Controllers
             if (result.Succeeded)
             { 
                 return RedirectToAction("Index", "Home");
-            }
-            else
-            {
-                return View("Error");
-            }
+            } 
+            return View("Error");
         }
 
         [HttpGet]
@@ -343,9 +326,8 @@ namespace Online_Auction.Controllers
                if (user == null)
                {
                    return NotFound();
-               }
-               EmailService emailService = new EmailService(); 
-               await emailService.SendEmailAsync(user.Email, viewModel.Subject, viewModel.Message);
+               }  
+               await _emailService.SendEmailAsync(user.Email, viewModel.Subject, viewModel.Message);
                return RedirectToAction("IndexUsers");
         }
         

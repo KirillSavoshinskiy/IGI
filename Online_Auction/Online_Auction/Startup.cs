@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Online_Auction.Data;
 using Online_Auction.Models;
+using Online_Auction.Services;
 
 namespace Online_Auction
 {
@@ -27,11 +28,12 @@ namespace Online_Auction
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient<IEmailService, EmailService>();
             services.AddDbContext<ApplicationContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationContext>()
                 .AddDefaultTokenProviders();
-            
+            services.AddSingleton<ISaveImage, SaveImage>();
             services.AddControllersWithViews();
         }
 

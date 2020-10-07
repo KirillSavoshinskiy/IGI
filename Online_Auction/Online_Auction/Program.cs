@@ -19,10 +19,7 @@ namespace Online_Auction
     {
         public static async Task Main(string[] args)
         {
-            var host = CreateHostBuilder(args).Build();
-            var config = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json")
-                .Build();
+            var host = CreateHostBuilder(args).Build(); 
 
             Log.Logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
