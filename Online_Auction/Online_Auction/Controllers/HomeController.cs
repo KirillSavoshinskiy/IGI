@@ -5,10 +5,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Online_Auction.Data;
+using Online_Auction.Hubs;
 using Online_Auction.Models;
+using Online_Auction.ViewModels;
 
 namespace Online_Auction.Controllers
 {
@@ -16,13 +19,13 @@ namespace Online_Auction.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private UserManager<User> _userManager; 
-        private ApplicationContext _context;
+        private ApplicationContext _context; 
 
         public HomeController(ILogger<HomeController> logger, ApplicationContext context, UserManager<User> userManager)
         {
             _logger = logger;
             _context = context;
-            _userManager = userManager;
+            _userManager = userManager; 
         }
 
         public IActionResult Index()
@@ -34,8 +37,14 @@ namespace Online_Auction.Controllers
         [HttpGet]
         public IActionResult ProfileLot(int id)
         {
-            return View(_context.Lots.Where(i => i.Id == id).Include(img => img.Images)
-                .Include(u => u.User).Include(c => c.Category).First());
+            ProfileLotViewModel viewModel = new ProfileLotViewModel()
+            {
+                Lot = _context.Lots.Where(i => i.Id == id).Include(img => img.Images)
+                    .Include(u => u.User).Include(c => c.Category).First(),
+                Comments = _context.Comments.Where(i => i.LotId == id)
+                    .Include(u => u.User).ToList()
+            };
+            return View(viewModel);
         }
 
         [HttpPost]
@@ -59,9 +68,7 @@ namespace Online_Auction.Controllers
             }
             return Content("Введённая ставка ниже прежней");
         }        
-        
-        
-        
+ 
         
         
         public IActionResult Privacy()

@@ -11,7 +11,7 @@
     @foreach (var user in Model)
     {
         <tr>
-            <td><a class="btn badge-primary" asp-action="ProfileUser" asp-route-id="@user.Id">@user.UserName</a></td>
+            <td><a class="btn badge-primary" asp-action="ProfileUser" asp-route-name="@user.UserName">@user.UserName</a></td>
             <td>@user.Email</td>
             <td>
                 <div class="form-group">

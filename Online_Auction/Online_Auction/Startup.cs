@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Online_Auction.Data;
+using Online_Auction.Hubs;
 using Online_Auction.Models;
 using Online_Auction.Services;
 
@@ -34,6 +35,7 @@ namespace Online_Auction
             services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationContext>()
                 .AddDefaultTokenProviders();
             services.AddSingleton<ISaveImage, SaveImage>();
+            services.AddSignalR();
             services.AddControllersWithViews();
         }
 
@@ -57,14 +59,18 @@ namespace Online_Auction
             app.UseRouting();
  
             app.UseAuthentication();  
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
+            app.UseAuthorization(); 
+            app.UseSignalR(routes =>
             {
+                routes.MapHub<ChatHub>($"/Home/ProfileLot");
+            });
+            app.UseEndpoints(endpoints =>
+            { 
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+            
         }
     }
 }

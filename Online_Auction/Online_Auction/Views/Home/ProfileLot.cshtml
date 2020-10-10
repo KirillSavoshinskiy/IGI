@@ -1,4 +1,4 @@
-﻿@model Online_Auction.Models.Lot;
+﻿@model Online_Auction.ViewModels.ProfileLotViewModel;
 
 @{
     ViewBag.Title = "Информация о лоте";
@@ -8,7 +8,7 @@
 <h2>Информация о лоте</h2>
 <div>
     <div class="row">
-        @foreach (var img in Model.Images)
+        @foreach (var img in Model.Lot.Images)
         {
             <div class="p-div-img">
                 <img src="@img.ImgPath" alt="" class="p-img"/>
@@ -16,35 +16,35 @@
         }
     </div>
     <div class="row">
-        <div class="col box-shadow"> 
+        <div class="col box-shadow">
             <ul>
-                <li style="list-style-type: none;"><h6>@Model.Name</h6></li>
-                <li style="list-style-type: none;"><span>Лот № @Model.Id</span></li>
-                <li style="list-style-type: none;"><span>Продавец: @Model.User.UserName</span></li>
-                <li style="list-style-type: none;"><span>В категории: @Model.Category.Name</span></li>
+                <li style="list-style-type: none;"><h6>@Model.Lot.Name</h6></li>
+                <li style="list-style-type: none;"><span>Лот № @Model.Lot.Id</span></li>
+                <li style="list-style-type: none;"><span>Продавец: @Model.Lot.User.UserName</span></li>
+                <li style="list-style-type: none;"><span>В категории: @Model.Lot.Category.Name</span></li>
                 <li style="list-style-type: none;">
                     <img src="/Icons/cal.png" alt="price" width="15" height="15" class="icon">
                     <h6 style=" float: left; margin-top: 2px; margin-right: 2px;">Старт торгов:</h6>
-                    <p>@Model.StartSale</p>
+                    <p>@Model.Lot.StartSale</p>
                 </li>
                 <li style="list-style-type: none;">
                     <img src="/Icons/cal2.png" alt="price" width="15" height="15" class="icon">
                     <h6 style=" float: left; margin-top: 2px; margin-right: 2px;">Конец торгов:</h6>
-                    <p>@Model.FinishSale</p>
+                    <p>@Model.Lot.FinishSale</p>
                 </li>
-            </ul>  
+            </ul>
         </div>
         <div class="col box-shadow">
             <li style="list-style-type: none;">
                 <img src="/Icons/price.png" alt="price" width="15" height="15" class="icon">
                 <h5 style=" float: left; margin-right: 2px;">Текущая цена:</h5>
-                <p>@Model.Price BYN</p>
+                <p>@Model.Lot.Price BYN</p>
             </li>
-            @if (User.Identity.IsAuthenticated && (Model.StartSale <= DateTime.Now && Model.FinishSale > DateTime.Now))
+            @if (User.Identity.IsAuthenticated && (Model.Lot.StartSale <= DateTime.Now && Model.Lot.FinishSale > DateTime.Now))
             {
                 <li style="list-style-type: none;">
                     <h5 style="margin-top: 2px; margin-right: 2px;">Введите свою ставку:</h5>
-                    <form method="post" asp-action="IncreasePrice" asp-route-id="@Model.Id">
+                    <form method="post" asp-action="IncreasePrice" asp-route-id="@Model.Lot.Id">
                         <input type="number" name="price" style="border-radius: 5px;"/>
                         <input type="submit" value="Поставить" class="btn badge-primary"/>
                     </form>
@@ -54,11 +54,11 @@
             {
                 <h5 style="margin-top: 2px; margin-right: 2px;">Вы не авторизованы и не можете делать ставки</h5>
             }
-            else if (Model.FinishSale < DateTime.Now)
+            else if (Model.Lot.FinishSale < DateTime.Now)
             {
                 <h5 style="margin-top: 2px; margin-right: 2px;">Торги завершились</h5>
             }
-            else if (Model.StartSale > DateTime.Now)
+            else if (Model.Lot.StartSale > DateTime.Now)
             {
                 <h5 style="margin-top: 2px; margin-right: 2px;">Торги ещё не начались</h5>
             }
@@ -67,10 +67,28 @@
     <div class="row">
         <div class="col box-shadow">
             <h5>Описание лота:</h5>
-            <text>@Model.Description</text>
+            <text>@Model.Lot.Description</text>
         </div>
         <div class="col box-shadow">
             <h5>Комментарии:</h5>
+            @if(User.Identity.IsAuthenticated)
+            {
+                <input type="text" id="messageInput"/>
+                <input type="button" id="sendButton" value="Send Message"/> 
+            }
+            
+            <input hidden="hidden" type="number" value="@Model.Lot.Id" id="lotId"/>
+            <input hidden="hidden" type="text" id="userInput" value="@User.Identity.Name"/>
+            <ul id="messagesList">
+                @foreach (var comment in Model.Comments)
+                {
+                    <li>@comment.User.UserName: @comment.CommentText</li>
+                }
+            </ul>
         </div>
     </div>
 </div>
+
+<script src="~/lib/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/chat.js"></script>
+ 

@@ -49,44 +49,7 @@ namespace Online_Auction.Controllers
         [HttpGet]
         public IActionResult CreateLot()
         {
-            ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
-        {   
-            viewModel.User = _userManager.Users.First(i => i.UserName == User.Identity.Name); 
-           
-            if (viewModel.StartSale < DateTime.Now)
-            {
-                ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
-            }
-
-            if (viewModel.StartSale > viewModel.FinishSale)
-            {
-                ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт" );
-            }
-            
-            if (ModelState.IsValid)
-            {
-                var lot = new Lot
-                {
-                    Name = viewModel.Name,
-                    Description = viewModel.Description,
-                    Price = viewModel.Price,
-                    StartSale = viewModel.StartSale,
-                    FinishSale = viewModel.FinishSale,
-                    User = viewModel.User,
-                    CategoryId = viewModel.CategoryId 
-                };
-                _context.Lots.Add(lot);
-                await _context.SaveChangesAsync(); 
-                await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot);  
-                return RedirectToAction("IndexLots");
-            } 
-            ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
-            return View(viewModel);
+            return RedirectToAction("CreateLot", "Account");
         }
 
         [HttpGet]
@@ -138,6 +101,8 @@ namespace Online_Auction.Controllers
                 lot.StartSale = viewModel.StartSale;
                 lot.FinishSale = viewModel.FinishSale;
                 lot.CategoryId = viewModel.CategoryId;
+                _context.Images.RemoveRange(_context.Images.Where(i => i.LotId == lot.Id));
+                await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot);  
                 _context.Lots.Update(lot);
                 await _context.SaveChangesAsync();
                 return RedirectToAction("IndexLots", "Admin");
@@ -147,33 +112,9 @@ namespace Online_Auction.Controllers
         }
         
         [HttpGet]
-        public async Task<IActionResult> ProfileLot(int id)
+        public IActionResult ProfileLot(int id)
         {
-            var lot = await _context.Lots.Where(l => l.Id == id).Include(i => i.User)
-                .Include(img => img.Images).Include(c => c.Category).FirstAsync();
-            return View(lot);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> IncreasePrice(int id, decimal price)
-        {
-            var lot = await _context.Lots.FindAsync(id);
-            var owner = await _userManager.FindByIdAsync(lot.UserId);
-            if (owner.UserName == User.Identity.Name)
-            {
-                return Content("Вы не можете делать ставки на свой лот");
-            }
-            var user = _userManager.Users.First(i => i.UserName == User.Identity.Name);
-             
-            if (price > lot.Price)
-            {
-                lot.Price = price;
-                lot.UserPriceId = user.Id;
-                _context.Lots.Update(lot);
-                await _context.SaveChangesAsync();
-                return RedirectToAction("ProfileLot", "Admin", new {id = lot.Id});
-            }
-            return Content("Введённая ставка ниже прежней");
+            return RedirectToAction("ProfileLot", "Home", new {id = id});
         }
         
         [HttpPost]
@@ -229,82 +170,12 @@ namespace Online_Auction.Controllers
             return View(_userManager.Users.ToList());
         }
         [HttpGet]
-        public IActionResult Create() => View();
-        
-        [HttpPost]
-        public async Task<IActionResult> Create(CreateUserViewModel viewModel)
-        {
-            if (ModelState.IsValid)
-            {
-                User user = new User {UserName = viewModel.UserName, Email = viewModel.Email}; 
-                var result = await _userManager.CreateAsync(user, viewModel.Password);
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(user, "user");
-                    var confToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    var confUrl = Url.Action(
-                        "ConfirmEmail",
-                        "Account",
-                        new {userId = user.Id, token = confToken},
-                        protocol: HttpContext.Request.Scheme); 
-                    await _emailService.SendEmailAsync(viewModel.Email, "Подтверждение регистрации",
-                        $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confUrl}'>link</a>");
-                    return Content("Для завершения регистрации проверьте электронную почту и перейдите по ссылке, указанной в письме");
-                }
-
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError("", error.Description);
-                }
-            }
-            return View(viewModel);
-        }
+        public IActionResult Create() => RedirectToAction("Register", "Account");
         
         [HttpGet]
-        public async Task<IActionResult> ConfirmEmail(string userId, string token)
-        {
-            if (userId == null || token == null)
-            {
-                return View("Error");
-            }
-
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null )
-            {
-                return View("Error");
-            }
-
-            var result = await _userManager.ConfirmEmailAsync(user, token);
-            if (result.Succeeded)
-            { 
-                return RedirectToAction("Index", "Home");
-            } 
-            return View("Error");
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ProfileUser(string id)
-        {
-            User user = await _userManager.FindByIdAsync(id);
-            var userRoles = await _userManager.GetRolesAsync(user);
-            var userLots = await _context.Lots.Where(i => i.UserId == user.Id)
-                .Include(c => c.Category).Include(i => i.Images).ToListAsync(); 
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-            ProfileViewModel viewModel = new ProfileViewModel
-            {
-                UserName = user.UserName,
-                Email = user.Email,
-                EmailConfirmed = user.EmailConfirmed,
-                UserRoles = userRoles,
-                Lots = userLots
-            };
-            
-            return View(viewModel);
-        }
+        public IActionResult ProfileUser(string name) => 
+            RedirectToAction("Profile", "Account", new {name = name});
+ 
 
         [HttpGet]
         public async Task<IActionResult> SendMail(string id)

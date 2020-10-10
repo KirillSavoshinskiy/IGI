@@ -78,7 +78,7 @@ namespace Online_Auction.Controllers
         [HttpGet]
         public async Task<IActionResult> Profile(string name)
         {
-            if (User.Identity.Name != name)
+            if (User.Identity.Name != name && !User.IsInRole("admin"))
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
             }
@@ -161,7 +161,7 @@ namespace Online_Auction.Controllers
             var lot = _context.Lots.Include(i => i.User)
                 .Include(img => img.Images) 
                 .First(i => i.Id == id);
-            if (User.Identity.Name != lot.User.UserName)
+            if (User.Identity.Name != lot.User.UserName && !User.IsInRole("admin"))
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
             }
@@ -212,6 +212,8 @@ namespace Online_Auction.Controllers
                 lot.StartSale = viewModel.StartSale;
                 lot.FinishSale = viewModel.FinishSale;
                 lot.CategoryId = viewModel.CategoryId;
+                _context.Images.RemoveRange(_context.Images.Where(i => i.LotId == lot.Id));
+                await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot);  
                 _context.Lots.Update(lot);
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Profile", "Account");

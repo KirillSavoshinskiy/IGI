@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using Online_Auction.Models;
 
 namespace Online_Auction.ViewModels
@@ -36,13 +37,9 @@ namespace Online_Auction.ViewModels
         public DateTime FinishSale { get; set; }
         
         public string UserId { get; set; }
-        public User User { get; set; }
+        public User User { get; set; } 
+        public int? CategoryId { get; set; }  
         
-        public List<Comment> Comments { get; set; }
-        
-        public int? CategoryId { get; set; }
-        public Category Category { get; set; }
-        
-        public List<Img> Images { get; set; }
+        public IFormFileCollection Images { get; set; }
     }
 }
