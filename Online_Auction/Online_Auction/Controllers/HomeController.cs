@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Online_Auction.Data;
 using Online_Auction.Hubs;
 using Online_Auction.Models;
+using Online_Auction.Services;
 using Online_Auction.ViewModels;
 
 namespace Online_Auction.Controllers
@@ -20,18 +21,26 @@ namespace Online_Auction.Controllers
         private readonly ILogger<HomeController> _logger;
         private UserManager<User> _userManager; 
         private ApplicationContext _context; 
+        private IEmailService _emailService;
+        private IAlertFinishSale _alertFinishSale;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationContext context, UserManager<User> userManager)
+        public HomeController(ILogger<HomeController> logger, ApplicationContext context, UserManager<User> userManager
+        , IEmailService emailService, IAlertFinishSale alertFinishSale)
         {
             _logger = logger;
             _context = context;
-            _userManager = userManager; 
+            _userManager = userManager;
+            _emailService = emailService;
+            _alertFinishSale = alertFinishSale;
         }
 
-        public IActionResult Index()
-        { 
-            return View(_context.Lots.Include(img => img.Images)
-                .Include(u => u.User).Include(c => c.Category));
+        public async Task<IActionResult> Index()
+        {
+            var lots = _context.Lots.Include(img => img.Images)
+                .Include(u => u.User).Include(c => c.Category)
+                .ToList();
+            await _alertFinishSale.Alert(lots, _context, _emailService, _userManager);
+            return View(lots);
         }
 
         [HttpGet]
