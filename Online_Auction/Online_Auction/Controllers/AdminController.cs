@@ -101,6 +101,7 @@ namespace Online_Auction.Controllers
                 lot.StartSale = viewModel.StartSale;
                 lot.FinishSale = viewModel.FinishSale;
                 lot.CategoryId = viewModel.CategoryId;
+                lot.SentEmail = false;
                 _context.Images.RemoveRange(_context.Images.Where(i => i.LotId == lot.Id));
                 await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot);  
                 _context.Lots.Update(lot);

@@ -62,14 +62,13 @@ namespace Online_Auction.Controllers
                         protocol: HttpContext.Request.Scheme);
                     await _emailService.SendEmailAsync(viewModel.Email, "Подтверждение регистрации",
                         $"Подтвердите регистрацию, перейдя по ссылке: <a href='{confUrl}'>link</a>");
-                    return Content("Для завершения регистрации проверьте электронную почту и перейдите по ссылке, указанной в письме");
+                    return Content(
+                        "Для завершения регистрации проверьте электронную почту и перейдите по ссылке, указанной в письме");
                 }
-                else
+
+                foreach (var error in result.Errors)
                 {
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError("", error.Description);
-                    }
+                    ModelState.AddModelError("", error.Description);
                 }
             }
             return View(viewModel);
@@ -212,6 +211,7 @@ namespace Online_Auction.Controllers
                 lot.StartSale = viewModel.StartSale;
                 lot.FinishSale = viewModel.FinishSale;
                 lot.CategoryId = viewModel.CategoryId;
+                lot.SentEmail = false;
                 _context.Images.RemoveRange(_context.Images.Where(i => i.LotId == lot.Id));
                 await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot);  
                 _context.Lots.Update(lot);
