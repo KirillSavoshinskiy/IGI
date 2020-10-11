@@ -20,18 +20,7 @@ namespace Online_Auction
         public static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build(); 
-
-            Log.Logger = new LoggerConfiguration()
-                .Enrich.FromLogContext()
-                .WriteTo.File("Logs\\log-all.txt")
-                .WriteTo.Logger(lc => lc
-                    .Filter.ByIncludingOnly(le => le.Level == LogEventLevel.Error)
-                    .WriteTo.File("Logs\\log-error.txt"))
-                .WriteTo.Logger(lc => lc
-                    .Filter.ByIncludingOnly(le => le.Level == LogEventLevel.Error)
-                    .WriteTo.Console()) 
-                .CreateLogger();
-
+ 
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
@@ -39,24 +28,23 @@ namespace Online_Auction
                 {
                     var userManager = services.GetRequiredService<UserManager<User>>();
                     var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-                    await AdminRoleInitializer.InitializeRolesAdmin(userManager, rolesManager);
-                    Log.Information("Application Starting.");
+                    await AdminRoleInitializer.InitializeRolesAdmin(userManager, rolesManager); 
                     host.Run();
                 }
                 catch (Exception ex)
                 {
                     Log.Fatal(ex, "The Application failed to start."); ;
                 }
-                finally
-                {
-                    Log.CloseAndFlush();
-                }
+             
             }
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseSerilog()
+                .UseSerilog((hostingContext, loggerConfig) =>
+                    {
+                        loggerConfig.ReadFrom.Configuration(hostingContext.Configuration);
+                    })
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
 }

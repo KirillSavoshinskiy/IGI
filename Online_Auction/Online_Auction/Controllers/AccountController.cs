@@ -161,7 +161,7 @@ namespace Online_Auction.Controllers
             var lot = _context.Lots.Include(i => i.User)
                 .Include(img => img.Images) 
                 .First(i => i.Id == id);
-            if (User.Identity.Name != lot.User.UserName && !User.IsInRole("admin"))
+            if (User.Identity.Name != lot.User.UserName)
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
             }
@@ -274,11 +274,9 @@ namespace Online_Auction.Controllers
             {
                 await _signInManager.SignInAsync(user, false);
                 return RedirectToAction("Index", "Home");
-            }
-            else
-            {
-                return View("Error");
-            }
+            } 
+            return View("Error");
+             
         }
 
         [HttpPost]
