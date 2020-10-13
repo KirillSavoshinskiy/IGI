@@ -11,13 +11,13 @@
     @foreach (var user in Model)
     {
         <tr>
-            <td><a class="btn badge-primary" asp-action="ProfileUser" asp-route-name="@user.UserName">@user.UserName</a></td>
+            <td><a class="btn badge-primary" asp-action="Profile" asp-controller="Account" asp-route-name="@user.UserName">@user.UserName</a></td>
             <td>@user.Email</td>
             <td>
                 <div class="form-group">
-                <a class="btn alert-primary" asp-action="Edit" asp-route-id="@user.Id">Изменить</a>
+                <a class="btn alert-primary" style="float: left; margin-right: 5px;" asp-action="Edit" asp-route-id="@user.Id">Изменить</a>
                 <form asp-action="Delete" asp-route-id="@user.Id" method="post">
-                    <button type="submit" class="btn btn-sm btn-danger">
+                    <button type="submit" style="float: left; margin-right: 5px; height: 37px;" class="btn btn-sm btn-danger">
                         Удалить
                     </button>
                 </form>

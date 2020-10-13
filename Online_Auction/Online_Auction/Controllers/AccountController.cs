@@ -160,11 +160,11 @@ namespace Online_Auction.Controllers
             var lot = _context.Lots.Include(i => i.User)
                 .Include(img => img.Images) 
                 .First(i => i.Id == id);
-            if (User.Identity.Name != lot.User.UserName)
+            if (User.Identity.Name != lot.User.UserName && !User.IsInRole("admin"))
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
             }
-            if (lot.StartSale < DateTime.Now)
+            if ((lot.StartSale < DateTime.Now) && (lot.FinishSale > DateTime.Now))
             {
                 return Content("Вы не можете изменять лот, так как торги начались");
             }
@@ -200,8 +200,9 @@ namespace Online_Auction.Controllers
             }
             if (ModelState.IsValid)
             {
-                var lot = await _context.Lots.FindAsync(viewModel.Id);
-                if (User.Identity.Name != lot.User.UserName)
+                var lot = _context.Lots.Where(i => i.Id ==viewModel.Id)
+                    .Include(u => u.User).First();
+                if (User.Identity.Name != lot.User.UserName && !User.IsInRole("admin"))
                 {
                     return Content("Вы пытаетесь войти в чужой профиль");
                 }
@@ -216,7 +217,7 @@ namespace Online_Auction.Controllers
                 await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot);  
                 _context.Lots.Update(lot);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("Profile", "Account");
+                return RedirectToAction("Profile", "Account", new{ name = lot.User.UserName});
             }
             ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
             return View(viewModel);
@@ -226,18 +227,17 @@ namespace Online_Auction.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteLot(int id)
         {
-            var lot = await _context.Lots.FindAsync(id);
-            if (User.Identity.Name != lot.User.UserName)
+            var lot = _context.Lots.Where(i => i.Id == id)
+                .Include(u => u.User).First();
+            if (User.Identity.Name != lot.User.UserName && !User.IsInRole("admin"))
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
-            }
-            if (lot != null)
-            {
-                _context.Lots.Remove(lot);
-                await _context.SaveChangesAsync();
-            }
+            } 
+            _context.Lots.Remove(lot);
+            await _context.SaveChangesAsync();
+             
 
-            return RedirectToAction("Profile");
+            return RedirectToAction("Profile", new{ name = lot.User.UserName});
         }
         
         [HttpGet]

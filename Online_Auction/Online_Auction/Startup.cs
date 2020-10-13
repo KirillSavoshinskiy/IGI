@@ -44,6 +44,7 @@ namespace Online_Auction
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            //env.EnvironmentName = "Production";
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -53,7 +54,7 @@ namespace Online_Auction
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
-
+            //app.UseStatusCodePagesWithReExecute("/Error/Index", "?statusCode={0}");
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 

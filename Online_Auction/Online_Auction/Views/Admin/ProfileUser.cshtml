@@ -33,7 +33,7 @@
 
 <div class="form-group">
     <label class="control-label">Права доступа:</label>
-    @foreach (string role in Model.UserRoles)
+    @foreach (var role in Model.UserRoles)
     {
         <span class="badge-primary">@role</span>
     }
