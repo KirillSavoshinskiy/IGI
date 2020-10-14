@@ -21,7 +21,18 @@
                 <li style="list-style-type: none;"><h6>@Model.Lot.Name</h6></li>
                 <li style="list-style-type: none;"><span>Лот № @Model.Lot.Id</span></li>
                 <li style="list-style-type: none;"><span>Продавец: @Model.Lot.User.UserName</span></li>
-                <li style="list-style-type: none;"><span>В категории: @Model.Lot.Category.Name</span></li>
+                @if (Model.Lot.CategoryId != null)
+                {
+                    <li style="list-style-type: none;">
+                        <span>В категории: @Model.Lot.Category.Name</span>
+                    </li>
+                }
+                else
+                {
+                    <li style="list-style-type: none;">
+                        <span>В категории: не принадлежит категории</span>
+                    </li>
+                }
                 <li style="list-style-type: none;">
                     <img src="/Icons/cal.png" alt="price" width="15" height="15" class="icon">
                     <h6 style=" float: left; margin-top: 2px; margin-right: 2px;">Старт торгов:</h6>

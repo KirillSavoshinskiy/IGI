@@ -51,8 +51,7 @@ namespace Online_Auction.Controllers
         {
             return RedirectToAction("CreateLot", "Account");
         }
-
-         
+        
         
         [HttpGet]
         public IActionResult ProfileLot(int id)
@@ -92,13 +91,35 @@ namespace Online_Auction.Controllers
 
             return RedirectToAction("IndexCategories");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> EditCategory(int id)
+        {
+            var category = await _context.Categories.FindAsync(id);
+            return View(category);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditCategory(Category category)
+        {
+            var cat = await _context.Categories.FindAsync(category.Id);
+            cat.Name = category.Name;
+            _context.Categories.Update(cat);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("IndexCategories");
+        }
         
         [HttpPost]
         public async Task<IActionResult> DeleteCategory(int id) //later maybe add else block
         {
-            var category = await _context.Categories.FindAsync(id); 
+            var category = _context.Categories.Where(i => i.Id == id)
+                .Include(l => l.Lots).First();
             if (category != null)
             {
+                foreach (var lot in category.Lots)
+                {
+                    lot.CategoryId = null;
+                }
                 _context.Categories.Remove(category);
                 await _context.SaveChangesAsync();
             }

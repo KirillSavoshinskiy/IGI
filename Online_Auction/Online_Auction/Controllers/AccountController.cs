@@ -240,20 +240,7 @@ namespace Online_Auction.Controllers
             return RedirectToAction("Profile", new{ name = lot.User.UserName});
         }
         
-        [HttpGet]
-        [Authorize]
-        public IActionResult ProfileLot(int id)
-        {
-            var lot = _context.Lots.Where(i => i.Id == id)
-                .Include(img => img.Images)
-                .Include(u => u.User)
-                .Include(c => c.Category).First();
-            if (User.Identity.Name != lot.User.UserName)
-            {
-                return Content("Вы пытаетесь войти в чужой профиль");
-            }
-            return View(lot);
-        }
+         
 
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail(string userId, string token)

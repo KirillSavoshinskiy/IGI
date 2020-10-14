@@ -46,7 +46,7 @@
         {
         
             <tr>
-                <td><a class="btn badge-primary" asp-action="ProfileLot" asp-controller="Account" asp-route-id="@lot.Id">@lot.Name</a></td>
+                <td><a class="btn badge-primary" asp-action="ProfileLot" asp-controller="Home" asp-route-id="@lot.Id">@lot.Name</a></td>
                 <td><img style="width: 50px; height: 40px" src="@lot.Images.First().ImgPath"/></td> 
                 <td>
                     <form asp-action="DeleteLot" asp-route-id="@lot.Id" method="post">

@@ -18,7 +18,15 @@
                 <li style="list-style-type: none;"><h6>@lot.Name</h6></li>
                 <li style="list-style-type: none;"><span>Лот № @lot.Id</span></li>
                 <li style="list-style-type: none;"><span>Продавец: @lot.User.UserName</span></li>
-                <li style="list-style-type: none;"><span>В категории: @lot.Category.Name</span></li>
+                @if (lot.CategoryId != null)
+                {
+                    <li style="list-style-type: none;"><span>В категории: @lot.Category.Name</span></li>
+                }
+                else
+                {
+                    <li style="list-style-type: none;"><span>В категории: не принадлежит категории</span></li>
+                }
+                
                 <li style="list-style-type: none;">
                     <a class="btn badge-primary" 
                        asp-controller="Home"  

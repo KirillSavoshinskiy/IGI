@@ -15,8 +15,10 @@
         <tr>
             <td><span>@category.Name</span></td>
             <td>
+                <a asp-action="EditCategory" asp-controller="Admin" asp-route-id="@category.Id" 
+                   style="float: left; margin-right: 5px" class="btn badge-primary">Изменить </a>
                 <form asp-action="DeleteCategory" asp-route-id="@category.Id" method="post">
-                    <button type="submit" class="btn btn-sm btn-danger">
+                    <button type="submit" style="height: 37px" class="btn btn-sm btn-danger">
                         Удалить
                     </button>
                 </form>

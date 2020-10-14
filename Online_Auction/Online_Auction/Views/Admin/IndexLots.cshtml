@@ -16,7 +16,7 @@
             <td><img style="width: 50px; height: 40px" src="@lot.Images.First().ImgPath"/></td>
             <td><span>@lot.User.UserName</span></td>
             <td>
-                <a class="btn alert-primary" asp-action="EditLot" asp-route-id="@lot.Id">Изменить</a>
+                <a class="btn alert-primary" asp-action="EditLot" asp-controller="Account" asp-route-id="@lot.Id">Изменить</a>
                 <form asp-action="DeleteLot" asp-route-id="@lot.Id" method="post">
                     <button type="submit" class="btn btn-sm btn-danger">
                         Удалить
