@@ -117,11 +117,11 @@ namespace Online_Auction.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = await _userManager.FindByIdAsync(usr.Id);
+                var user = await _userManager.FindByNameAsync(usr.Id);
                 if (user != null)
                 {
                     user.UserName = usr.UserName; 
-                    if (user.Email != usr.UserName)
+                    if (user.Email != usr.Email)
                     {
                         user.EmailConfirmed = false;
                     }
@@ -143,6 +143,8 @@ namespace Online_Auction.Controllers
                             return Content(
                                 "Для завершения изменения профиля проверьте электронную почту и перейдите по ссылке, указанной в письме");
                         }
+                        await _signInManager.SignInAsync(user, false);
+                        return RedirectToAction("Profile", new {name = usr.UserName});
                     }
 
                     foreach (var item in result.Errors)

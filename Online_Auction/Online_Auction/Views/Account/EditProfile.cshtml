@@ -6,20 +6,21 @@
 }
 
 <h2>Изменение аккаунта</h2>
-<form method="post" asp-controller="Account" asp-action="Register">
-    <div asp-validation-summary="ModelOnly"></div>
-    <div>
-        <label asp-for="UserName"></label><br/>
-        <input asp-for="UserName" class="form-control"/>
-        <span asp-validation-for="UserName"></span>
-    </div>
-    <div>
-        <label asp-for="Email"></label><br/>
-        <input asp-for="Email" class="form-control"/>
-        <span asp-validation-for="Email"></span>
-    </div> 
+<form method="post" asp-controller="Account" asp-action="EditProfile">
+    <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="form-group">
+            <input type="hidden" asp-for="Id" />
+        </div>
+        <div class="form-group">
+                <label asp-for="UserName" class="control-label">Имя юзера</label>
+                <input type="text" asp-for="UserName" class="form-control" />
+            </div>
+        <div class="form-group">
+            <label asp-for="Email" class="control-label">Email</label>
+            <input type="text" asp-for="Email" class="form-control" />
+        </div> 
     <br/>
     <div>
-        <input type="submit" value="Регистрация"/>
+        <input type="submit" value="Сохранить"/>
     </div>
 </form>
