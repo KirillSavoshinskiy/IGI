@@ -5,13 +5,14 @@
     Layout = "_Layout";
 }
 
-<a asp-action="Create">Создать пользователя</a>
+<a asp-action="Register" asp-controller="Account">Создать пользователя</a>
 <table class="table">
     <tr><th>Имя юзера</th><th>Email</th><th>Действия</th></tr>
     @foreach (var user in Model)
     {
         <tr>
-            <td><a class="btn badge-primary" asp-action="Profile" asp-controller="Account" asp-route-name="@user.UserName">@user.UserName</a></td>
+            <td><a class="btn badge-primary" asp-action="Profile" 
+                   asp-controller="Account" asp-route-name="@user.UserName">@user.UserName</a></td>
             <td>@user.Email</td>
             <td>
                 <div class="form-group">

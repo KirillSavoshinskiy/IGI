@@ -49,7 +49,7 @@ namespace Online_Auction.Controllers
         {
             if (ModelState.IsValid)
             {
-                User user = new User {UserName = viewModel.UserName, Email = viewModel.Email};
+                var user = new User {UserName = viewModel.UserName, Email = viewModel.Email};
                 var result = await _userManager.CreateAsync(user, viewModel.Password);
                 if (result.Succeeded)
                 {
@@ -81,7 +81,7 @@ namespace Online_Auction.Controllers
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
             }
-            User user = await _userManager.FindByNameAsync(name);
+            var user = await _userManager.FindByNameAsync(name);
             var userRoles = await _userManager.GetRolesAsync(user);
             var userLots = await _context.Lots.Where(i => i.UserId == user.Id)
                 .Include(c => c.Category).Include(i => i.Images).ToListAsync(); 
@@ -90,7 +90,7 @@ namespace Online_Auction.Controllers
                 return NotFound();
             }
 
-            ProfileViewModel viewModel = new ProfileViewModel
+            var viewModel = new ProfileViewModel
             {
                 UserName = user.UserName,
                 Email = user.Email,
@@ -100,6 +100,61 @@ namespace Online_Auction.Controllers
             };
             return View(viewModel);
         }
+        
+        [HttpGet]
+        public async Task<IActionResult> EditProfile(string id)
+        {
+            var user = await _userManager.FindByNameAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }  
+            return View(user);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditProfile(User usr)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByIdAsync(usr.Id);
+                if (user != null)
+                {
+                    user.UserName = usr.UserName; 
+                    if (user.Email != usr.UserName)
+                    {
+                        user.EmailConfirmed = false;
+                    }
+                    user.Email = usr.Email;
+                    
+                    var result = await _userManager.UpdateAsync(user);
+                    if (result.Succeeded)
+                    {
+                        if (!user.EmailConfirmed)
+                        {
+                            var confToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                            var confUrl = Url.Action(
+                                "ConfirmEmail",
+                                "Account",
+                                new {userId = user.Id, token = confToken},
+                                protocol: HttpContext.Request.Scheme);
+                            await _emailService.SendEmailAsync(usr.Email, "Подтверждение почты",
+                                $"Подтвердите почту, перейдя по ссылке: <a href='{confUrl}'>link</a>");
+                            return Content(
+                                "Для завершения изменения профиля проверьте электронную почту и перейдите по ссылке, указанной в письме");
+                        }
+                    }
+
+                    foreach (var item in result.Errors)
+                    {
+                        ModelState.AddModelError("", item.Description);
+                    }
+                }
+            }
+            return View(usr);
+        }
+        
+        
         
         [HttpGet]
         [Authorize]
@@ -114,7 +169,7 @@ namespace Online_Auction.Controllers
         public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
         { 
             var users = _userManager.Users;
-            List<string> imgs = new List<string>();
+            var imgs = new List<string>();
             foreach (var user in users) 
             { 
                 if (User.Identity.Name == user.UserName) 
@@ -173,7 +228,7 @@ namespace Online_Auction.Controllers
             {
                 return Content("Вы не можете изменять лот, так как торги закончились");
             }
-            EditLotViewModel viewModel = new EditLotViewModel
+            var viewModel = new EditLotViewModel
             {
                 Id = lot.Id,
                 Name = lot.Name,

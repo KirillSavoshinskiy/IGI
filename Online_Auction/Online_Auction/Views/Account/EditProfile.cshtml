@@ -1,0 +1,25 @@
+﻿@model Online_Auction.Models.User;
+
+@{
+    ViewBag.Title = "Изменение аккаунта";
+    Layout = "_Layout";
+}
+
+<h2>Изменение аккаунта</h2>
+<form method="post" asp-controller="Account" asp-action="Register">
+    <div asp-validation-summary="ModelOnly"></div>
+    <div>
+        <label asp-for="UserName"></label><br/>
+        <input asp-for="UserName" class="form-control"/>
+        <span asp-validation-for="UserName"></span>
+    </div>
+    <div>
+        <label asp-for="Email"></label><br/>
+        <input asp-for="Email" class="form-control"/>
+        <span asp-validation-for="Email"></span>
+    </div> 
+    <br/>
+    <div>
+        <input type="submit" value="Регистрация"/>
+    </div>
+</form>

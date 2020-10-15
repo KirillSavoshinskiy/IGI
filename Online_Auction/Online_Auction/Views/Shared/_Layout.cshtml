@@ -30,7 +30,7 @@
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                     </li>
                 </ul>
-            </div> 
+            </div>
             @if (User.IsInRole("admin"))
             {
                 <a  style="margin-right: 10px" asp-controller="Admin" asp-action="IndexPanel">Админ панель</a>

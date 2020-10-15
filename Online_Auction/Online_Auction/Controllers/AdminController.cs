@@ -21,20 +21,16 @@ namespace Online_Auction.Controllers
     {
         private UserManager<User> _userManager;
         private RoleManager<IdentityRole> _roleManager;
-        private ApplicationContext _context;
-        IWebHostEnvironment _appEnvironment;
-        private IEmailService _emailService;
-        private ISaveImage _saveImage;
+        private ApplicationContext _context; 
+        private IEmailService _emailService; 
 
         public AdminController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, ApplicationContext context
-        , IWebHostEnvironment appEnvironment, IEmailService emailService, ISaveImage saveImage)
+        , IEmailService emailService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _context = context;
-            _appEnvironment = appEnvironment;
-            _emailService = emailService;
-            _saveImage = saveImage;
+            _context = context; 
+            _emailService = emailService; 
         }
         
         public IActionResult IndexPanel() => View();
@@ -46,19 +42,6 @@ namespace Online_Auction.Controllers
                 .ToList());
         }
 
-        [HttpGet]
-        public IActionResult CreateLot()
-        {
-            return RedirectToAction("CreateLot", "Account");
-        }
-        
-        
-        [HttpGet]
-        public IActionResult ProfileLot(int id)
-        {
-            return RedirectToAction("ProfileLot", "Home", new {id = id});
-        }
-        
         [HttpPost]
         public async Task<IActionResult> DeleteLot(int id)
         {
@@ -85,7 +68,7 @@ namespace Online_Auction.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Categories.Add(category);
+                await _context.Categories.AddAsync(category);
                 await _context.SaveChangesAsync();
             }
 
@@ -129,23 +112,13 @@ namespace Online_Auction.Controllers
         /// <summary>
         /// user functionality
         /// </summary> 
-        public IActionResult IndexUsers()
-        {
-            return View(_userManager.Users.ToList());
-        }
-        [HttpGet]
-        public IActionResult Create() => RedirectToAction("Register", "Account");
-        
-        [HttpGet]
-        public IActionResult ProfileUser(string name) => 
-            RedirectToAction("Profile", "Account", new {name = name});
- 
+        public IActionResult IndexUsers() => View(_userManager.Users.ToList());
 
         [HttpGet]
         public async Task<IActionResult> SendMail(string id)
         {
-            User user = await _userManager.FindByIdAsync(id);
-            MailViewModel viewModel = new MailViewModel
+            var user = await _userManager.FindByIdAsync(id);
+            var viewModel = new MailViewModel
             {
                 Id = user.Id,
                 UserName = user.UserName,
@@ -157,7 +130,7 @@ namespace Online_Auction.Controllers
         [HttpPost]
         public async Task<IActionResult> SendMail(MailViewModel viewModel)
         { 
-               User user = await _userManager.FindByIdAsync(viewModel.Id);
+               var user = await _userManager.FindByIdAsync(viewModel.Id);
                if (user == null)
                {
                    return NotFound();
@@ -169,7 +142,7 @@ namespace Online_Auction.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(string id)
         {
-            User user = await _userManager.FindByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 return NotFound();
@@ -177,7 +150,7 @@ namespace Online_Auction.Controllers
 
             var userRoles = await _userManager.GetRolesAsync(user);
             var allRoles = _roleManager.Roles.ToList();
-            EditUserViewModel model = new EditUserViewModel
+            var model = new EditUserViewModel
             {
                 Id = user.Id, 
                 UserName = user.UserName, 
@@ -193,7 +166,7 @@ namespace Online_Auction.Controllers
         {
             if (ModelState.IsValid)
             {
-                User user = await _userManager.FindByIdAsync(viewModel.Id);
+                var user = await _userManager.FindByIdAsync(viewModel.Id);
                 if (user != null)
                 {
                     var userRoles = await _userManager.GetRolesAsync(user); 
@@ -215,7 +188,6 @@ namespace Online_Auction.Controllers
                     {
                         ModelState.AddModelError("", item.Description);
                     }
-                    
                 }
             }
 
