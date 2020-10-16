@@ -13,7 +13,7 @@ namespace Online_Auction.Services
         public async Task Alert(List<Lot> lots, ApplicationContext context, IEmailService emailService
         , UserManager<User> userManager)
         {
-            foreach (var lot in lots.Where(d => (d.FinishSale < DateTime.Now) && !d.SentEmail))
+            foreach (var lot in lots.Where(d => (d.FinishSale < DateTime.UtcNow.AddHours(3)) && !d.SentEmail))
             {
                 if (lot.UserPriceId != lot.UserId && !string.IsNullOrEmpty(lot.UserPriceId))
                 {

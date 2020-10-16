@@ -180,7 +180,7 @@ namespace Online_Auction.Controllers
                 }
             }
 
-            if (viewModel.StartSale < DateTime.Now)
+            if (viewModel.StartSale < DateTime.UtcNow.AddHours(3))
             {
                 ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
             }
@@ -247,7 +247,7 @@ namespace Online_Auction.Controllers
         [HttpPost]
         public async Task<IActionResult> EditLot(EditLotViewModel viewModel)
         {
-            if (viewModel.StartSale < DateTime.Now)
+            if (viewModel.StartSale < DateTime.UtcNow.AddHours(3))
             {
                 ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
             }

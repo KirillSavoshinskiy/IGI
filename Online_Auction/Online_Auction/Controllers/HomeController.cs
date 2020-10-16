@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using Hangfire;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -32,13 +34,13 @@ namespace Online_Auction.Controllers
             _userManager = userManager;
             _emailService = emailService;
             _alertFinishSale = alertFinishSale;
-        }
+        } 
 
         public async Task<IActionResult> Index()
-        {
+        { 
             var lots = _context.Lots.Include(img => img.Images)
                 .Include(u => u.User).Include(c => c.Category)
-                .ToList();
+                .ToList(); 
             await _alertFinishSale.Alert(lots, _context, _emailService, _userManager);
             return View(lots);
         }

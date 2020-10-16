@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire;
+using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -10,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using Online_Auction.Data;
 using Online_Auction.Hubs;
 using Online_Auction.Models;
@@ -34,6 +37,7 @@ namespace Online_Auction
             services.AddScoped<IEmailService, EmailService>();
             services.AddDbContext<ApplicationContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
             services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationContext>()
                 .AddDefaultTokenProviders();
             services.AddSingleton<ISaveImage, SaveImage>();
@@ -44,7 +48,7 @@ namespace Online_Auction
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            //env.EnvironmentName = "Production";
+            env.EnvironmentName = "Production";
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -54,10 +58,10 @@ namespace Online_Auction
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
-            //app.UseStatusCodePagesWithReExecute("/Error/Index", "?statusCode={0}");
+            app.UseStatusCodePagesWithReExecute("/Error/Index", "?statusCode={0}");
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
+            app.UseStaticFiles();  
+            
             app.UseRouting();
             app.UseSerilogRequestLogging();
             app.UseAuthentication();  
