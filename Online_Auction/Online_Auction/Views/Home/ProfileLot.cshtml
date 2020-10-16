@@ -84,8 +84,18 @@
             <h5>Комментарии:</h5>
             @if(User.Identity.IsAuthenticated)
             {
-                <input type="text" id="messageInput"/>
-                <input type="button" id="sendButton" value="Send Message"/> 
+                <input type="text" id="messageInput" style=" float: left;"/>
+                @if (User.Identity.Name == Model.Lot.User.UserName && User.IsInRole("admin"))
+                {
+                    <form asp-action="DeleteComment" asp-controller="Account" asp-route-id="@Model.Lot.Id" method="post">
+                        <button type="submit" style="float: right;">
+                            <img style="width: 20px; height: 20px"
+                                 src="~/Icons/trashcan_icon-icons.com_58163.png" alt=""/>
+                        </button>
+                    </form>
+                }
+                <input  type="button" id="sendButton" value="Send Message"/> 
+                 
             }
             
             <input hidden="hidden" type="number" value="@Model.Lot.Id" id="lotId"/>
@@ -93,7 +103,10 @@
             <ul id="messagesList">
                 @foreach (var comment in Model.Comments)
                 {
-                    <li>@comment.User.UserName: @comment.CommentText</li>
+                    <li>
+                         
+                        @comment.User.UserName: @comment.CommentText
+                    </li>
                 }
             </ul>
         </div>

@@ -291,13 +291,19 @@ namespace Online_Auction.Controllers
                 return Content("Вы пытаетесь войти в чужой профиль");
             } 
             _context.Lots.Remove(lot);
-            await _context.SaveChangesAsync();
-             
-
+            await _context.SaveChangesAsync(); 
             return RedirectToAction("Profile", new{ name = lot.User.UserName});
         }
-        
-         
+
+        [HttpPost]
+        [Authorize]
+        public async Task<ActionResult> DeleteComment(int id)
+        {
+            var comment = _context.Comments.ToList(); 
+            _context.Comments.RemoveRange(comment);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("ProfileLot", "Home", new {id = id});
+        }
 
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
