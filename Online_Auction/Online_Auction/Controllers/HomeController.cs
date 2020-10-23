@@ -36,13 +36,21 @@ namespace Online_Auction.Controllers
             _alertFinishSale = alertFinishSale;
         } 
 
-        public async Task<IActionResult> Index()
-        { 
+        public async Task<IActionResult> Index(int pageIndex = 1)
+        {
+            var countLots = 10;
             var lots = _context.Lots.Include(img => img.Images)
                 .Include(u => u.User).Include(c => c.Category)
                 .ToList(); 
             await _alertFinishSale.Alert(lots, _context, _emailService, _userManager);
-            return View(lots);
+            PageViewModel pageViewModel = new PageViewModel(lots.Count, pageIndex, countLots);
+            var items =  lots.Skip((pageIndex - 1) * countLots).Take(countLots).ToList();
+            LotViewModel viewModel = new LotViewModel
+            {
+                PageViewModel = pageViewModel,
+                Lots = items
+            };
+            return View(viewModel);
         }
 
         [HttpGet]

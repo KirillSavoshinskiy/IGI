@@ -1,11 +1,11 @@
-﻿@model IEnumerable<Online_Auction.Models.Lot>;
+﻿@model Online_Auction.ViewModels.LotViewModel;
 
 @{
     ViewData["Title"] = "Home Page";
     Layout = "_Layout";
 }
 
-@foreach(var lot in Model){
+@foreach(var lot in Model.Lots){
 
     <div class="row box-shadow div-lot"> 
         <div class="col">
@@ -55,4 +55,21 @@
             </ul>
         </div>
     </div>
+}
+
+@if (Model.PageViewModel.HasPreviousPage)
+{
+    <a asp-action="Index"
+       asp-route-page="@(Model.PageViewModel.PageNumber - 1)"
+       class="btn btn-outline-dark"> 
+        Назад
+    </a>
+}
+@if (Model.PageViewModel.HasNextPage)
+{
+    <a asp-action="Index"
+       asp-route-page="@(Model.PageViewModel.PageNumber + 1)"
+       class="btn btn-outline-dark">
+        Вперед 
+    </a>
 }
