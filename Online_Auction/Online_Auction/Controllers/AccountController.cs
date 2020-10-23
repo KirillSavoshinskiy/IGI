@@ -356,6 +356,63 @@ namespace Online_Auction.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
+        
+        [HttpGet] 
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+        
+        [HttpPost] 
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(EmailViewModel viewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(viewModel.Email);
+                if (user == null)
+                { 
+                    return Content("Пользователя с такой почтой не существует");
+                }
+ 
+                var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var callbackUrl = Url.Action("ResetPassword", "Account", 
+                    new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
+                EmailService emailService = new EmailService();
+                await emailService.SendEmailAsync(viewModel.Email, "Reset Password",
+                    $"Для сброса пароля пройдите по ссылке: <a href='{callbackUrl}'>link</a>");
+                return Content("Для сброса пароля перейдите по ссылке в письме, отправленном на ваш email.");
+            }
+            return View(viewModel);
+        }
+        
+        [HttpGet] 
+        public IActionResult ResetPassword(string code = null) => code == null ? View("Error") : View();
+
+        [HttpPost] 
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return Content("Пользователя с такой почтой не существует");
+            }
+            var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
+            if (result.Succeeded)
+            {
+                return RedirectToAction("Login");
+            }
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(model);
+        }
     }
      
 }

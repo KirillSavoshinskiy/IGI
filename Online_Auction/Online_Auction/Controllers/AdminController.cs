@@ -195,11 +195,19 @@ namespace Online_Auction.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Delete(string id) //later maybe add else block
+        public async Task<IActionResult> Delete(string id)  
         {
             var user = await _userManager.FindByIdAsync(id);
+            if (user.UserName == "admin")
+            {
+                return Content("Вы не можете удалить админа");
+            }
+            
             if (user != null)
             {
+                var lots = await _context.Lots.Where(u => u.UserId == user.Id).ToListAsync();
+                _context.Lots.RemoveRange(lots);
+                await _context.SaveChangesAsync();
                 await _userManager.DeleteAsync(user);
                 
             }
