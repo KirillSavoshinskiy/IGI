@@ -58,17 +58,18 @@ namespace Online_Auction
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
-            //app.UseStatusCodePagesWithReExecute("/Error/Index", "?statusCode={0}");
+            app.UseSerilogRequestLogging();
+           // app.UseStatusCodePagesWithReExecute("/Error/Index", "?statusCode={0}");
             app.UseHttpsRedirection();
             app.UseStaticFiles();  
             
             app.UseRouting();
-            app.UseSerilogRequestLogging();
+            
             app.UseAuthentication();  
             app.UseAuthorization(); 
             app.UseSignalR(routes =>
             {
-                routes.MapHub<ChatHub>($"/Home/ProfileLot");
+                routes.MapHub<RateHub>($"/Home/ProfileLot");
             });
             app.UseEndpoints(endpoints =>
             { 

@@ -15,5 +15,12 @@ namespace Online_Auction.Data
             //Database.EnsureDeleted();
             Database.EnsureCreated();
         }
+
+        // protected override void OnModelCreating(ModelBuilder builder)
+        // {
+        //     builder.Entity<Img>().HasOne(l => l.Lot)
+        //         .WithMany(i => i.Images)
+        //         .HasForeignKey(k => k.LotId).OnDelete(DeleteBehavior.Cascade);
+        // }
     }
 }

@@ -11,7 +11,7 @@ namespace Online_Auction.Services
     public class AlertFinishSale: IAlertFinishSale
     {
         public async Task Alert(List<Lot> lots, ApplicationContext context, IEmailService emailService
-        , UserManager<User> userManager)
+        , UserManager<User> userManager)//////////////
         {
             foreach (var lot in lots.Where(d => (d.FinishSale < DateTime.UtcNow.AddHours(3)) && !d.SentEmail))
             {

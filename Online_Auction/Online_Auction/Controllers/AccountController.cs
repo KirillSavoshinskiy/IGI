@@ -53,7 +53,7 @@ namespace Online_Auction.Controllers
                 var userMail = await _userManager.FindByEmailAsync(viewModel.Email);
                 if (userMail != null)
                 {
-                    return Content("ользователь с такой почтой уже существует");
+                    return Content("Пользователь с такой почтой уже существует");
                 }
                 var result = await _userManager.CreateAsync(user, viewModel.Password);
                 if (result.Succeeded)
@@ -174,17 +174,10 @@ namespace Online_Auction.Controllers
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
-        { 
-            var users = _userManager.Users;
-            var imgs = new List<string>();
-            foreach (var user in users) 
-            { 
-                if (User.Identity.Name == user.UserName) 
-                { 
-                    viewModel.User = user; 
-                }
-            }
-
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            
+            
             if (viewModel.StartSale < DateTime.UtcNow.AddHours(3))
             {
                 ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
@@ -222,6 +215,7 @@ namespace Online_Auction.Controllers
             var lot = _context.Lots.Include(i => i.User)
                 .Include(img => img.Images) 
                 .First(i => i.Id == id);
+            
             if (User.Identity.Name != lot.User.UserName && !User.IsInRole("admin"))
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
@@ -340,7 +334,8 @@ namespace Online_Auction.Controllers
             if (ModelState.IsValid)
             {
                 var result =
-                    await _signInManager.PasswordSignInAsync(viewModel.UserName, viewModel.Password, viewModel.RememberMe, false);
+                    await _signInManager.PasswordSignInAsync(viewModel.UserName, viewModel.Password, 
+                        viewModel.RememberMe, false);
                 if (result.Succeeded)
                 {
                     return RedirectToAction("Index", "Home");
