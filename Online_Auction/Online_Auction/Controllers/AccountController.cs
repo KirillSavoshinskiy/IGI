@@ -50,6 +50,11 @@ namespace Online_Auction.Controllers
             if (ModelState.IsValid)
             {
                 var user = new User {UserName = viewModel.UserName, Email = viewModel.Email};
+                var userMail = await _userManager.FindByEmailAsync(viewModel.Email);
+                if (userMail != null)
+                {
+                    return Content("ользователь с такой почтой уже существует");
+                }
                 var result = await _userManager.CreateAsync(user, viewModel.Password);
                 if (result.Succeeded)
                 {
