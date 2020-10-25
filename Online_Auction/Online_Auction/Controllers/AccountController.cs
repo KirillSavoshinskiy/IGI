@@ -175,7 +175,7 @@ namespace Online_Auction.Controllers
         [Authorize]
         public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
         {
-            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var user = await _userManager.FindByNameAsync(User.Identity.Name);  
             
             
             if (viewModel.StartSale < DateTime.UtcNow.AddHours(3))
@@ -197,7 +197,7 @@ namespace Online_Auction.Controllers
                     Price = viewModel.Price,
                     StartSale = viewModel.StartSale,
                     FinishSale = viewModel.FinishSale,
-                    User = viewModel.User,
+                    User = user,
                     CategoryId = viewModel.CategoryId 
                 };
                 _context.Lots.Add(lot);

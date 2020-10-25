@@ -3,34 +3,51 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Online_Auction.Data;
 using Online_Auction.Models;
 
 namespace Online_Auction.Services
 {
-    public class AlertFinishSale: IAlertFinishSale
+    public class AlertFinishSale 
     {
-        public async Task Alert(List<Lot> lots, ApplicationContext context, IEmailService emailService
-        , UserManager<User> userManager)//////////////
+        IServiceProvider _serviceProvider;
+        public AlertFinishSale(IServiceProvider serviceProvider)
         {
-            foreach (var lot in lots.Where(d => (d.FinishSale < DateTime.UtcNow.AddHours(3)) && !d.SentEmail))
+            _serviceProvider = serviceProvider;
+        }
+        public async Task Alert( ) 
+        {
+            using (IServiceScope scope = _serviceProvider.CreateScope())
+            await using (var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>())
             {
-                if (lot.UserPriceId != lot.UserId && !string.IsNullOrEmpty(lot.UserPriceId))
+                var lots = await context.Lots
+                    .Where(d => (d.FinishSale < DateTime.UtcNow.AddHours(3)) && !d.SentEmail)
+                    .Include(u => u.User).ToListAsync();
+                using (var userManager = scope.ServiceProvider.GetService<UserManager<User>>())
                 {
-                    var user = await userManager.FindByIdAsync(lot.UserPriceId);
-                    await emailService.SendEmailAsync(user.Email, "Вы победили в торгах",
-                        $"Вы выкупили лот: {lot.Name}");
-                    await emailService.SendEmailAsync(lot.User.Email, "Информация по лоту",
-                        $"Торги на ваш лот {lot.Name} закончились");
+                    var emailService = new EmailService(); 
+                    foreach (var lot in lots.Where(d => (d.FinishSale < DateTime.UtcNow.AddHours(3)) && !d.SentEmail))
+                    {
+                        lot.SentEmail = true;
+                        context.Lots.Update(lot);
+                        await context.SaveChangesAsync();
+                        if (lot.UserPriceId != lot.UserId && !string.IsNullOrEmpty(lot.UserPriceId))
+                        {
+                            var user = await userManager.FindByIdAsync(lot.UserPriceId);
+                            await emailService.SendEmailAsync(user.Email, "Вы победили в торгах",
+                                $"Вы выкупили лот: {lot.Name}");
+                            await emailService.SendEmailAsync(lot.User.Email, "Информация по лоту",
+                                $"Торги на ваш лот {lot.Name} закончились");
+                        }
+                        else
+                        {
+                            await emailService.SendEmailAsync(lot.User.Email, "Информация по лоту",
+                                $"Ваш лот {lot.Name} никто не выкупил");
+                        }
+                    }
                 }
-                else
-                {
-                    await emailService.SendEmailAsync(lot.User.Email, "Информация по лоту",
-                        $"Ваш лот {lot.Name} никто не выкупил");
-                }
-
-                lot.SentEmail = true;
-                await context.SaveChangesAsync();
             }
         }
     }

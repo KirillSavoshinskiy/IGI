@@ -30,10 +30,10 @@ namespace Online_Auction
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+ 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddTransient<IAlertFinishSale, AlertFinishSale>();
+            //services.AddTransient<IAlertFinishSale, AlertFinishSale>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddDbContext<ApplicationContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
@@ -42,10 +42,12 @@ namespace Online_Auction
                 .AddDefaultTokenProviders();
             services.AddSingleton<ISaveImage, SaveImage>();
             services.AddSignalR();
+            services.AddHangfire(i => i.UseSqlServerStorage(
+                Configuration.GetConnectionString("DefaultConnection")));
             services.AddControllersWithViews();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+ 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             //env.EnvironmentName = "Production";
@@ -59,7 +61,9 @@ namespace Online_Auction
                 app.UseHsts();
             }
             app.UseSerilogRequestLogging();
-           // app.UseStatusCodePagesWithReExecute("/Error/Index", "?statusCode={0}");
+           // app.UseStatusCodePagesWithReExecute("/Error/Index", "?statusCode={0}"); 
+            app.UseHangfireServer();
+            app.UseHangfireDashboard();
             app.UseHttpsRedirection();
             app.UseStaticFiles();  
             

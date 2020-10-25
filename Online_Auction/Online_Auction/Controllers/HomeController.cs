@@ -19,30 +19,23 @@ using Online_Auction.ViewModels;
 namespace Online_Auction.Controllers
 {
     public class HomeController : Controller
-    {
-        private readonly ILogger<HomeController> _logger;
-        private UserManager<User> _userManager; 
-        private ApplicationContext _context; 
-        private IEmailService _emailService;
-        private IAlertFinishSale _alertFinishSale;
+    {  
+        private ApplicationContext _context;  
 
-        public HomeController(ILogger<HomeController> logger, ApplicationContext context, UserManager<User> userManager
-        , IEmailService emailService, IAlertFinishSale alertFinishSale)
-        {
-            _logger = logger;
-            _context = context;
-            _userManager = userManager;
-            _emailService = emailService;
-            _alertFinishSale = alertFinishSale;
+        public HomeController(ILogger<HomeController> logger, ApplicationContext context  )
+        { 
+            _context = context; 
         } 
 
         public async Task<IActionResult> Index(int pageIndex = 1)
         {
             var countLots = 10;
-            var lots = _context.Lots.Include(img => img.Images)
+            var lots = await _context.Lots.Include(img => img.Images)
                 .Include(u => u.User).Include(c => c.Category)
-                .ToList(); 
-            await _alertFinishSale.Alert(lots, _context, _emailService, _userManager);///////////////////////
+                .ToListAsync();
+             
+            
+            RecurringJob.AddOrUpdate<AlertFinishSale>(x => x.Alert(), Cron.Minutely); 
             PageViewModel pageViewModel = new PageViewModel(lots.Count, pageIndex, countLots);
             var items =  lots.Skip((pageIndex - 1) * countLots).Take(countLots).ToList();
             LotViewModel viewModel = new LotViewModel
