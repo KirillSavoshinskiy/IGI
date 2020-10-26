@@ -18,9 +18,7 @@ namespace Online_Auction.Data
 
         // protected override void OnModelCreating(ModelBuilder builder)
         // {
-        //     builder.Entity<Img>().HasOne(l => l.Lot)
-        //         .WithMany(i => i.Images)
-        //         .HasForeignKey(k => k.LotId).OnDelete(DeleteBehavior.Cascade);
+        //     builder.Entity<Lot>().HasMany(i => i.Images).WithOne();
         // }
     }
 }

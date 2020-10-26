@@ -35,9 +35,8 @@ namespace Online_Auction.ViewModels
         [DisplayFormat(DataFormatString="{0:dd-MM-yyyy HH}", ApplyFormatInEditMode=true)]
         [Display(Name = "Дата завершения торгов (в формате dd/MM/yyyy HH)")]
         public DateTime FinishSale { get; set; }
-        
-        public string UserId { get; set; }
-        public User User { get; set; } 
+
+        public int Now { get; set; } 
         public int? CategoryId { get; set; }  
         
         public IFormFileCollection Images { get; set; }

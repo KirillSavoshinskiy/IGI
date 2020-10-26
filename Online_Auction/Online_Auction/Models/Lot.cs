@@ -37,7 +37,7 @@ namespace Online_Auction.Models
         public bool SentEmail { get; set; }
         
         public string UserId { get; set; }
-        public User User { get; set; }
+        public User User { get; set; } 
         
         public List<Comment> Comments { get; set; }
         
@@ -45,5 +45,7 @@ namespace Online_Auction.Models
         public Category Category { get; set; }
         
         public List<Img> Images { get; set; }
+        
+        public int Hours { get; set; }
     }
 }

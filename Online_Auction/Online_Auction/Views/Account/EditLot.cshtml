@@ -8,6 +8,7 @@
 <h2>Изменение лота</h2>
 <form asp-action="EditLot" asp-controller="Account"  enctype="multipart/form-data">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input asp-for="Now" type="hidden" value="@DateTime.Now.Hour"/>
     <div>
         <label asp-for="Name"></label><br/>
         <input asp-for="Name" class="form-control"/>

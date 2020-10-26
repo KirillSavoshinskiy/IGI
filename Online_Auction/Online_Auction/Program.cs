@@ -20,7 +20,7 @@ namespace Online_Auction
         public static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build(); 
- 
+            
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
@@ -29,13 +29,13 @@ namespace Online_Auction
                     var userManager = services.GetRequiredService<UserManager<User>>();
                     var rolesManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                     await AdminRoleInitializer.InitializeRolesAdmin(userManager, rolesManager); 
-                    host.Run();
+                     
                 }
                 catch (Exception ex)
                 {
                     Log.Fatal(ex, "The Application failed to start."); ;
                 }
-             
+                host.Run();
             }
         }
 

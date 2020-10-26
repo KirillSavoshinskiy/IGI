@@ -3,8 +3,6 @@
 var connection = new signalR.HubConnectionBuilder().withUrl("/Home/ProfileLot").build();
 
  
-//document.getElementById("sendButton").disabled = true;
- 
 connection.on("ReceiveRate", function (user, rate) { 
     document.getElementById("price").textContent = rate + " " + "BYN"; 
 });
@@ -18,7 +16,6 @@ connection.on("AlertOwner", function (alert) {
 });
 
 connection.start().then(function(){
-    console.log("connect"); 
 }).catch(function (err) {
     return console.error(err.toString());
 }); 

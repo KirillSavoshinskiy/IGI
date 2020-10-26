@@ -162,7 +162,6 @@ namespace Online_Auction.Controllers
         }
         
         
-        
         [HttpGet]
         [Authorize]
         public IActionResult CreateLot()
@@ -174,11 +173,14 @@ namespace Online_Auction.Controllers
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
-        {
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);  
-            
-            
-            if (viewModel.StartSale < DateTime.UtcNow.AddHours(3))
+        { 
+            var cookie = HttpContext.Request.Cookies["hour"];
+            var hour = Int32.Parse(cookie);
+            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+             
+            var hours = hour - DateTime.Now.Hour;
+             
+            if (viewModel.StartSale < DateTime.Now.AddHours(hours))
             {
                 ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
             }
@@ -187,6 +189,7 @@ namespace Online_Auction.Controllers
             {
                 ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт" );
             }
+
             
             if (ModelState.IsValid)
             {
@@ -198,7 +201,8 @@ namespace Online_Auction.Controllers
                     StartSale = viewModel.StartSale,
                     FinishSale = viewModel.FinishSale,
                     User = user,
-                    CategoryId = viewModel.CategoryId 
+                    CategoryId = viewModel.CategoryId,
+                    Hours = hours
                 };
                 _context.Lots.Add(lot);
                 await _context.SaveChangesAsync();
@@ -220,12 +224,12 @@ namespace Online_Auction.Controllers
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
             }
-            if ((lot.StartSale < DateTime.Now) && (lot.FinishSale > DateTime.Now))
+            if ((lot.StartSale < DateTime.Now.AddHours(lot.Hours)) && (lot.FinishSale > DateTime.Now.AddHours(lot.Hours)))
             {
                 return Content("Вы не можете изменять лот, так как торги начались");
             }
 
-            if (lot.FinishSale < DateTime.Now)
+            if (lot.FinishSale < DateTime.Now.AddHours(lot.Hours))
             {
                 return Content("Вы не можете изменять лот, так как торги закончились");
             }
@@ -246,7 +250,9 @@ namespace Online_Auction.Controllers
         [HttpPost]
         public async Task<IActionResult> EditLot(EditLotViewModel viewModel)
         {
-            if (viewModel.StartSale < DateTime.UtcNow.AddHours(3))
+            var lot = _context.Lots.Where(i => i.Id ==viewModel.Id)
+                .Include(u => u.User).First(); 
+            if (viewModel.StartSale < DateTime.Now.AddHours(lot.Hours))
             {
                 ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
             }
@@ -256,8 +262,6 @@ namespace Online_Auction.Controllers
             }
             if (ModelState.IsValid)
             {
-                var lot = _context.Lots.Where(i => i.Id ==viewModel.Id)
-                    .Include(u => u.User).First();
                 if (User.Identity.Name != lot.User.UserName && !User.IsInRole("admin"))
                 {
                     return Content("Вы пытаетесь войти в чужой профиль");
@@ -268,7 +272,7 @@ namespace Online_Auction.Controllers
                 lot.StartSale = viewModel.StartSale;
                 lot.FinishSale = viewModel.FinishSale;
                 lot.CategoryId = viewModel.CategoryId;
-                lot.SentEmail = false;
+                lot.SentEmail = false; 
                 _context.Images.RemoveRange(_context.Images.Where(i => i.LotId == lot.Id));
                 await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot);  
                 _context.Lots.Update(lot);

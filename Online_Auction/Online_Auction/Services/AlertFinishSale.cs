@@ -23,12 +23,12 @@ namespace Online_Auction.Services
             await using (var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>())
             {
                 var lots = await context.Lots
-                    .Where(d => (d.FinishSale < DateTime.UtcNow.AddHours(3)) && !d.SentEmail)
+                    .Where(d => (d.FinishSale < DateTime.Now.AddHours(d.Hours)) && !d.SentEmail)
                     .Include(u => u.User).ToListAsync();
                 using (var userManager = scope.ServiceProvider.GetService<UserManager<User>>())
                 {
                     var emailService = new EmailService(); 
-                    foreach (var lot in lots.Where(d => (d.FinishSale < DateTime.UtcNow.AddHours(3)) && !d.SentEmail))
+                    foreach (var lot in lots)
                     {
                         lot.SentEmail = true;
                         context.Lots.Update(lot);

@@ -32,7 +32,7 @@ namespace Online_Auction.ViewModels
         [Display(Name = "Дата завершения торгов (в формате dd/MM/yyyy HH)")]
         public DateTime FinishSale { get; set; }
         
-        public User User { get; set; } 
+        public int Now { get; set; } 
          
         public int CategoryId { get; set; }
         
