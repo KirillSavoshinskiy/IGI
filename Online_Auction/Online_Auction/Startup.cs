@@ -33,7 +33,7 @@ namespace Online_Auction
  
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddTransient<IAlertFinishSale, AlertFinishSale>();
+            services.AddTransient<IDeleteLot, DeleteLot>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddDbContext<ApplicationContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));

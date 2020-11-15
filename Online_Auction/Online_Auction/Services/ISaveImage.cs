@@ -8,7 +8,6 @@ namespace Online_Auction.Services
 {
     public interface ISaveImage
     {
-        public Task SaveImg(IFormFileCollection images, ApplicationContext context, 
-            IWebHostEnvironment appEnvironment, Lot lot);
+        public Task SaveImg(IFormFileCollection images, IWebHostEnvironment appEnvironment, Lot lot);
     }
 }

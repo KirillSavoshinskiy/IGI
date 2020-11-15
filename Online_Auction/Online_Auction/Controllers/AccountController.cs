@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Online_Auction.Data;
 using Online_Auction.Models;
 using Online_Auction.Services;
@@ -16,26 +15,27 @@ using Online_Auction.ViewModels;
 
 namespace Online_Auction.Controllers
 {
-     
-    public class AccountController: Controller
+    public class AccountController : Controller
     {
         private UserManager<User> _userManager;
-        private SignInManager<User> _signInManager; 
+        private SignInManager<User> _signInManager;
         private ApplicationContext _context;
-        IWebHostEnvironment _appEnvironment;
+        private IWebHostEnvironment _appEnvironment;
         private IEmailService _emailService;
         private ISaveImage _saveImage;
+        private IDeleteLot _deleteLot;
 
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, 
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager,
             IWebHostEnvironment appEnvironment, ApplicationContext context, IEmailService emailService,
-            ISaveImage saveImage)
+            ISaveImage saveImage, IDeleteLot deleteLot)
         {
             _userManager = userManager;
-            _signInManager = signInManager; 
+            _signInManager = signInManager;
             _context = context;
             _appEnvironment = appEnvironment;
             _emailService = emailService;
             _saveImage = saveImage;
+            _deleteLot = deleteLot;
         }
 
         [HttpGet]
@@ -55,6 +55,7 @@ namespace Online_Auction.Controllers
                 {
                     return Content("Пользователь с такой почтой уже существует");
                 }
+
                 var result = await _userManager.CreateAsync(user, viewModel.Password);
                 if (result.Succeeded)
                 {
@@ -76,6 +77,7 @@ namespace Online_Auction.Controllers
                     ModelState.AddModelError("", error.Description);
                 }
             }
+
             return View(viewModel);
         }
 
@@ -86,10 +88,11 @@ namespace Online_Auction.Controllers
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
             }
+
             var user = await _userManager.FindByNameAsync(name);
             var userRoles = await _userManager.GetRolesAsync(user);
             var userLots = await _context.Lots.Where(i => i.UserId == user.Id)
-                .Include(c => c.Category).Include(i => i.Images).ToListAsync(); 
+                .Include(c => c.Category).Include(i => i.Images).ToListAsync();
             if (user == null)
             {
                 return NotFound();
@@ -105,7 +108,7 @@ namespace Online_Auction.Controllers
             };
             return View(viewModel);
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> EditProfile(string id)
         {
@@ -113,7 +116,8 @@ namespace Online_Auction.Controllers
             if (user == null)
             {
                 return NotFound();
-            }  
+            }
+
             return View(user);
         }
 
@@ -125,13 +129,14 @@ namespace Online_Auction.Controllers
                 var user = await _userManager.FindByNameAsync(usr.Id);
                 if (user != null)
                 {
-                    user.UserName = usr.UserName; 
+                    user.UserName = usr.UserName;
                     if (user.Email != usr.Email)
                     {
                         user.EmailConfirmed = false;
                     }
+
                     user.Email = usr.Email;
-                    
+
                     var result = await _userManager.UpdateAsync(user);
                     if (result.Succeeded)
                     {
@@ -148,6 +153,7 @@ namespace Online_Auction.Controllers
                             return Content(
                                 "Для завершения изменения профиля проверьте электронную почту и перейдите по ссылке, указанной в письме");
                         }
+
                         await _signInManager.SignInAsync(user, false);
                         return RedirectToAction("Profile", new {name = usr.UserName});
                     }
@@ -158,10 +164,11 @@ namespace Online_Auction.Controllers
                     }
                 }
             }
+
             return View(usr);
         }
-        
-        
+
+
         [HttpGet]
         [Authorize]
         public IActionResult CreateLot()
@@ -173,24 +180,24 @@ namespace Online_Auction.Controllers
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
-        { 
+        {
             var cookie = HttpContext.Request.Cookies["hour"];
             var hour = Int32.Parse(cookie);
             var user = await _userManager.FindByNameAsync(User.Identity.Name);
-             
+
             var hours = hour - DateTime.Now.Hour;
-             
+
             if (viewModel.StartSale < DateTime.Now.AddHours(hours))
             {
-                ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
+                ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас");
             }
 
             if (viewModel.StartSale > viewModel.FinishSale)
             {
-                ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт" );
+                ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт");
             }
 
-            
+
             if (ModelState.IsValid)
             {
                 var lot = new Lot
@@ -204,27 +211,30 @@ namespace Online_Auction.Controllers
                     CategoryId = viewModel.CategoryId,
                     Hours = hours
                 };
-                _context.Lots.Add(lot);
+                await _context.Lots.AddAsync(lot);
                 await _context.SaveChangesAsync();
-                await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot); 
-                return RedirectToAction("Index", "Home"); 
-            } 
+                await _saveImage.SaveImg(viewModel.Images, _appEnvironment, lot);
+                return RedirectToAction("Index", "Home");
+            }
+
             ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
             return View(viewModel);
         }
-        
+
         [HttpGet]
         public IActionResult EditLot(int id)
-        { 
+        {
             var lot = _context.Lots.Include(i => i.User)
-                .Include(img => img.Images) 
+                .Include(img => img.Images)
                 .First(i => i.Id == id);
-            
+
             if (User.Identity.Name != lot.User.UserName && !User.IsInRole("admin"))
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
             }
-            if ((lot.StartSale < DateTime.Now.AddHours(lot.Hours)) && (lot.FinishSale > DateTime.Now.AddHours(lot.Hours)))
+
+            if ((lot.StartSale < DateTime.Now.AddHours(lot.Hours)) &&
+                (lot.FinishSale > DateTime.Now.AddHours(lot.Hours)))
             {
                 return Content("Вы не можете изменять лот, так как торги начались");
             }
@@ -233,6 +243,7 @@ namespace Online_Auction.Controllers
             {
                 return Content("Вы не можете изменять лот, так как торги закончились");
             }
+
             var viewModel = new EditLotViewModel
             {
                 Id = lot.Id,
@@ -250,39 +261,43 @@ namespace Online_Auction.Controllers
         [HttpPost]
         public async Task<IActionResult> EditLot(EditLotViewModel viewModel)
         {
-            var lot = _context.Lots.Where(i => i.Id ==viewModel.Id)
-                .Include(u => u.User).First(); 
+            var lot = _context.Lots.Where(i => i.Id == viewModel.Id)
+                .Include(u => u.User).First();
             if (viewModel.StartSale < DateTime.Now.AddHours(lot.Hours))
             {
-                ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас" );
+                ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас");
             }
+
             if (viewModel.StartSale > viewModel.FinishSale)
             {
-                ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт" );
+                ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт");
             }
+
             if (ModelState.IsValid)
             {
                 if (User.Identity.Name != lot.User.UserName && !User.IsInRole("admin"))
                 {
                     return Content("Вы пытаетесь войти в чужой профиль");
                 }
+
                 lot.Name = viewModel.Name;
                 lot.Description = viewModel.Description;
                 lot.Price = viewModel.Price;
                 lot.StartSale = viewModel.StartSale;
                 lot.FinishSale = viewModel.FinishSale;
                 lot.CategoryId = viewModel.CategoryId;
-                lot.SentEmail = false; 
+                lot.SentEmail = false;
                 _context.Images.RemoveRange(_context.Images.Where(i => i.LotId == lot.Id));
-                await _saveImage.SaveImg(viewModel.Images, _context, _appEnvironment, lot);  
+                await _saveImage.SaveImg(viewModel.Images, _appEnvironment, lot);
                 _context.Lots.Update(lot);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("Profile", "Account", new{ name = lot.User.UserName});
+                return RedirectToAction("Profile", "Account", new {name = lot.User.UserName});
             }
+
             ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
             return View(viewModel);
         }
-        
+
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> DeleteLot(int id)
@@ -292,17 +307,16 @@ namespace Online_Auction.Controllers
             if (User.Identity.Name != lot.User.UserName && !User.IsInRole("admin"))
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
-            } 
-            _context.Lots.Remove(lot);
-            await _context.SaveChangesAsync(); 
-            return RedirectToAction("Profile", new{ name = lot.User.UserName});
+            }
+            _deleteLot.Delete(lot); 
+            return RedirectToAction("Profile", new {name = lot.User.UserName});
         }
 
         [HttpPost]
         [Authorize]
         public async Task<ActionResult> DeleteComment(int id)
         {
-            var comment = _context.Comments.ToList(); 
+            var comment = _context.Comments.ToList();
             _context.Comments.RemoveRange(comment);
             await _context.SaveChangesAsync();
             return RedirectToAction("ProfileLot", "Home", new {id = id});
@@ -317,7 +331,7 @@ namespace Online_Auction.Controllers
             }
 
             var user = await _userManager.FindByIdAsync(userId);
-            if (user == null )
+            if (user == null)
             {
                 return View("Error");
             }
@@ -327,9 +341,9 @@ namespace Online_Auction.Controllers
             {
                 await _signInManager.SignInAsync(user, false);
                 return RedirectToAction("Index", "Home");
-            } 
+            }
+
             return View("Error");
-             
         }
 
         [HttpPost]
@@ -338,7 +352,7 @@ namespace Online_Auction.Controllers
             if (ModelState.IsValid)
             {
                 var result =
-                    await _signInManager.PasswordSignInAsync(viewModel.UserName, viewModel.Password, 
+                    await _signInManager.PasswordSignInAsync(viewModel.UserName, viewModel.Password,
                         viewModel.RememberMe, false);
                 if (result.Succeeded)
                 {
@@ -360,14 +374,14 @@ namespace Online_Auction.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
-        
-        [HttpGet] 
+
+        [HttpGet]
         public IActionResult ForgotPassword()
         {
             return View();
         }
-        
-        [HttpPost] 
+
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgotPassword(EmailViewModel viewModel)
         {
@@ -375,25 +389,26 @@ namespace Online_Auction.Controllers
             {
                 var user = await _userManager.FindByEmailAsync(viewModel.Email);
                 if (user == null)
-                { 
+                {
                     return Content("Пользователя с такой почтой не существует");
                 }
- 
+
                 var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var callbackUrl = Url.Action("ResetPassword", "Account", 
-                    new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
-                EmailService emailService = new EmailService();
-                await emailService.SendEmailAsync(viewModel.Email, "Reset Password",
+                var callbackUrl = Url.Action("ResetPassword", "Account",
+                    new {userId = user.Id, code = code}, protocol: HttpContext.Request.Scheme);
+                // EmailService emailService = new EmailService();
+                await _emailService.SendEmailAsync(viewModel.Email, "Reset Password",
                     $"Для сброса пароля пройдите по ссылке: <a href='{callbackUrl}'>link</a>");
                 return Content("Для сброса пароля перейдите по ссылке в письме, отправленном на ваш email.");
             }
+
             return View(viewModel);
         }
-        
-        [HttpGet] 
+
+        [HttpGet]
         public IActionResult ResetPassword(string code = null) => code == null ? View("Error") : View();
 
-        [HttpPost] 
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
@@ -401,22 +416,25 @@ namespace Online_Auction.Controllers
             {
                 return View(model);
             }
+
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
                 return Content("Пользователя с такой почтой не существует");
             }
+
             var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
             if (result.Succeeded)
             {
                 return RedirectToAction("Login");
             }
+
             foreach (var error in result.Errors)
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
+
             return View(model);
         }
     }
-     
 }

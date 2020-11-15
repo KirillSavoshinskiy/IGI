@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Channels;
+using System.Linq; 
 using System.Threading.Tasks;
-using Hangfire;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
+using Hangfire; 
+using Microsoft.AspNetCore.Mvc; 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Online_Auction.Data;
-using Online_Auction.Hubs;
+using Online_Auction.Data; 
 using Online_Auction.Models;
 using Online_Auction.Services;
 using Online_Auction.ViewModels;
@@ -22,7 +18,7 @@ namespace Online_Auction.Controllers
     {  
         private ApplicationContext _context;  
 
-        public HomeController(ILogger<HomeController> logger, ApplicationContext context  )
+        public HomeController(ApplicationContext context)
         { 
             _context = context; 
         } 

@@ -149,7 +149,7 @@ namespace Online_Auction.Controllers
             }
 
             var userRoles = await _userManager.GetRolesAsync(user);
-            var allRoles = _roleManager.Roles.ToList();
+            var allRoles = await _roleManager.Roles.ToListAsync();
             var model = new EditUserViewModel
             {
                 Id = user.Id, 

@@ -1,11 +1,18 @@
 ﻿using System.Threading.Tasks;
 using MailKit.Net.Smtp;
+using Microsoft.Extensions.Configuration;
 using MimeKit;
 
 namespace Online_Auction.Services
 {
     public class EmailService: IEmailService
-    { 
+    {
+        private IConfiguration Configuration;
+        public EmailService(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+        
         public async Task SendEmailAsync(string email, string subject, string mess)
         {
             var emailMess = new MimeMessage();
@@ -19,8 +26,10 @@ namespace Online_Auction.Services
         
             using (var client = new SmtpClient())
             {
-                await client.ConnectAsync("smtp.gmail.com", 587, false);//afrter change ssl true
-                await client.AuthenticateAsync("IgiOnlineAuction@gmail.com", "Password123#");
+                await client.ConnectAsync("smtp.gmail.com", 587, false); 
+                var ema = Configuration["ServerEmail:email"];
+                await client.AuthenticateAsync(Configuration["ServerEmail:email"],
+                    Configuration["ServerEmail:password"]);
                 await client.SendAsync(emailMess);
                 await client.DisconnectAsync(true);
             }

@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System; 
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Online_Auction.Data;
 using Online_Auction.Models;
@@ -12,22 +12,23 @@ namespace Online_Auction.Services
 {
     public class AlertFinishSale 
     {
-        IServiceProvider _serviceProvider;
-        public AlertFinishSale(IServiceProvider serviceProvider)
+        private IServiceProvider _serviceProvider;
+        private IConfiguration Configuration;
+        public AlertFinishSale(IServiceProvider serviceProvider, IConfiguration configuration)
         {
             _serviceProvider = serviceProvider;
+            Configuration = configuration;
         }
-        public async Task Alert( ) 
+        public async Task Alert() 
         {
-            using (IServiceScope scope = _serviceProvider.CreateScope())
+            using (var scope = _serviceProvider.CreateScope())
             await using (var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>())
             {
-                var lots = await context.Lots
-                    .Where(d => (d.FinishSale < DateTime.Now.AddHours(d.Hours)) && !d.SentEmail)
-                    .Include(u => u.User).ToListAsync();
+                var all =  await context.Lots.Include(u => u.User).ToListAsync();
+                var lots = all.Where(d => (d.FinishSale < DateTime.Now.AddHours(d.Hours)) && !d.SentEmail).ToList();
                 using (var userManager = scope.ServiceProvider.GetService<UserManager<User>>())
                 {
-                    var emailService = new EmailService(); 
+                    var emailService = new EmailService(Configuration); 
                     foreach (var lot in lots)
                     {
                         lot.SentEmail = true;
