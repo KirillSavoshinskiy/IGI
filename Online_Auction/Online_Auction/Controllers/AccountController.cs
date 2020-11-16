@@ -300,7 +300,7 @@ namespace Online_Auction.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> DeleteLot(int id)
+        public IActionResult DeleteLot(int id)
         {
             var lot = _context.Lots.Where(i => i.Id == id)
                 .Include(u => u.User).First();

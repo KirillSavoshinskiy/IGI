@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Humanizer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -9,17 +10,18 @@ using Online_Auction.Models;
 
 namespace Online_Auction.Hubs
 {
-    public class RateHub: Hub
-    { 
+    public class RateHub : Hub
+    {
         private ApplicationContext _context;
-        private UserManager<User> _userManager; 
+        private UserManager<User> _userManager;
+
         public RateHub(ApplicationContext context, UserManager<User> userManager)
         {
             _context = context;
             _userManager = userManager;
         }
 
-        public async Task SendRate(string userName, string rate, string lotId)///////////
+        public async Task SendRate(string userName, string rate, string lotId)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, lotId);
             bool flag = false;
@@ -31,7 +33,13 @@ namespace Online_Auction.Hubs
                 await Clients.Caller.SendAsync("AlertOwner", "Нельзя ставить на свой лот");
                 flag = true;
             }
-            if (lot.Price > Decimal.Parse(rate))
+
+            if (rate == "")
+            {
+                await Clients.Caller.SendAsync("Alert", "Введите ставку");
+            }
+
+            if (lot.Price >= Decimal.Parse(rate))
             {
                 await Clients.Caller.SendAsync("Alert", "Ставка слишком мала");
             }

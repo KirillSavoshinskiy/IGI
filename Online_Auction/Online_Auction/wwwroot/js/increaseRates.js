@@ -3,19 +3,24 @@
 var connection = new signalR.HubConnectionBuilder().withUrl("/Home/ProfileLot").build();
 
  
-connection.on("ReceiveRate", function (user, rate) { 
+connection.on("ReceiveRate", function (user, rate) {
     document.getElementById("price").textContent = rate + " " + "BYN"; 
 });
 
-connection.on("Alert", function (alert) {
+connection.on("Alert", function (alert) { 
     document.getElementById("Alert").textContent = alert; 
 });
 
-connection.on("AlertOwner", function (alert) {
+connection.on("AlertOwner", function (alert) { 
     document.getElementById("Alert").textContent = alert;
 });
 
+connection.invoke("GetConnection", "u", "1").catch(function (err) {
+    return console.error(err.toString());
+});
+
 connection.start().then(function(){
+    document.getElementById("price").textContent = "BYN";
 }).catch(function (err) {
     return console.error(err.toString());
 }); 
