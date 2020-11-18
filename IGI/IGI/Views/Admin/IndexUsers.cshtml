@@ -1,0 +1,32 @@
+﻿﻿
+@model List<IGI.Models.User>;
+
+@{
+    ViewBag.Title = "Список пользователей";
+    Layout = "_Layout";
+}
+
+<a asp-action="Register" asp-controller="Account">Создать пользователя</a>
+<table class="table">
+    <tr><th>Имя юзера</th><th>Email</th><th>Действия</th></tr>
+    @foreach (var user in Model)
+    {
+        <tr>
+            <td><a class="btn badge-primary" asp-action="Profile" 
+                   asp-controller="Account" asp-route-name="@user.UserName">@user.UserName</a></td>
+            <td>@user.Email</td>
+            <td>
+                <div class="form-group">
+                <a class="btn alert-primary" style="float: left; margin-right: 5px;" asp-action="Edit" asp-route-id="@user.Id">Изменить</a>
+                <form asp-action="Delete" asp-route-id="@user.Id" method="post">
+                    <button type="submit" style="float: left; margin-right: 5px; height: 37px;" class="btn btn-sm btn-danger">
+                        Удалить
+                    </button>
+                </form>
+                    <a class="btn badge-primary" asp-action="SendMail" asp-route-id="@user.Id">Написать на почту</a>
+                    </div>
+            </td>
+        </tr>   
+    }
+    
+</table>

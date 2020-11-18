@@ -1,0 +1,27 @@
+﻿﻿
+@model IGI.Models.User;
+
+@{
+    ViewBag.Title = "Изменение аккаунта";
+    Layout = "_Layout";
+}
+
+<h2>Изменение аккаунта</h2>
+<form method="post" asp-controller="Account" asp-action="EditProfile">
+    <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="form-group">
+            <input type="hidden" asp-for="Id" />
+        </div>
+        <div class="form-group">
+                <label asp-for="UserName" class="control-label">Имя юзера</label>
+                <input type="text" asp-for="UserName" class="form-control" />
+            </div>
+        <div class="form-group">
+            <label asp-for="Email" class="control-label">Email</label>
+            <input type="text" asp-for="Email" class="form-control" />
+        </div> 
+    <br/>
+    <div>
+        <input type="submit" value="Сохранить"/>
+    </div>
+</form>

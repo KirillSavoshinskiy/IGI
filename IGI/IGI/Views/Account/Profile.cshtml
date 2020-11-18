@@ -1,0 +1,66 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model IGI.ViewModels.ProfileViewModel;
+
+@{
+    ViewBag.Title = "Профиль";
+    Layout = "_Layout";
+}
+
+<h2>Профиль</h2> 
+
+<div class="form-group">
+    <label asp-for="UserName" class="control-label">Имя юзера:</label>
+    <span class="badge-primary">@Model.UserName</span> 
+</div>
+
+<div class="form-group">
+    <label asp-for="Email" class="control-label">Email:</label> 
+    <span class="badge-primary">@Model.Email</span> 
+</div>
+
+<div class="form-group">
+    <label asp-for="EmailConfirmed" class="control-label">Подтверждён по почте:</label> 
+    @if (Model.EmailConfirmed)
+    {
+        <span class="badge-primary">Подтверждён</span> 
+    }
+    else
+    {
+        <span class="badge-primary">Не подтверждён</span> 
+    }
+    
+</div>
+
+<div class="form-group">
+    <label class="control-label">Права доступа:</label>
+    @foreach (var role in Model.UserRoles)
+    {
+        <span class="badge-primary">@role</span>
+    }
+</div>
+<div class="form-group">
+    <a asp-action="EditProfile" asp-controller="Account" asp-route-id="@Model.UserName" class="btn badge-primary">Изменить</a>
+</div>
+<div class="form-group">
+    <label class="control-label">Мои лоты:</label>
+    <table class="table">
+        <tr><th>Название лота</th><th>Фото лота</th><th>Действия</th></tr>
+        @foreach (var lot in Model.Lots)
+        {
+        
+            <tr>
+                <td><a class="btn badge-primary" asp-action="ProfileLot" asp-controller="Home" asp-route-id="@lot.Id">@lot.Name</a></td>
+                <td><img style="width: 50px; height: 40px" src="@lot.Images.First().ImgPath"/></td> 
+                <td>
+                    <form asp-action="DeleteLot" asp-route-id="@lot.Id" method="post">
+                        <button type="submit" style="float: left; margin-right: 5px; height: 37px;"  class="btn btn-sm btn-danger">
+                            Удалить
+                        </button>
+                    </form>
+                    <a class="btn badge-primary" asp-action="EditLot"  asp-controller="Account" asp-route-id="@lot.Id">Изменить</a>
+                </td>
+            </tr>
+       
+        } 
+        </table>
+</div>

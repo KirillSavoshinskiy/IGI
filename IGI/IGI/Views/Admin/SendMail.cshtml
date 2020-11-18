@@ -1,0 +1,23 @@
+﻿@model IGI.ViewModels.MailViewModel;
+
+@{
+    ViewBag.Title = "Отправка сообщения";
+    Layout = "_Layout";
+}
+
+<h2>Отправка сообщения</h2>
+<form asp-action="SendMail" asp-controller="Admin">
+    <div>
+        <label asp-for="Subject"></label><br/>
+        <input asp-for="Subject" class="form-control"/>
+        <span asp-validation-for="Subject"></span>
+    </div>
+    <div>
+        <label asp-for="Message"></label><br/> 
+        <textarea asp-for="Message" cols="40" rows="3" class="form-control"></textarea>
+        <span asp-validation-for="Message"></span>
+    </div>
+    <div>
+        <input type="submit" class="btn badge-primary" style="margin-top: 5px" value="Отправить"/>
+    </div>
+</form>

@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "mssql1": {
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourcegroups/[parameters('resourceGroup1')]/providers/Microsoft.Sql/servers/dotn/databases/IGI_db1",
+      "type": "mssql.azure",
+      "connectionId": "DefaultConnection",
+      "secretStore": "LocalSecretsFile"
+    }
+  }
+}

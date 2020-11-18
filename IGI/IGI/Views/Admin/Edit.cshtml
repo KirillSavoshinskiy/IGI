@@ -1,0 +1,33 @@
+﻿
+@using Microsoft.AspNetCore.Identity
+@model IGI.ViewModels.EditUserViewModel;
+
+@{
+    ViewBag.Title = "Изменение юзера";
+    Layout = "_Layout";
+}
+
+<form asp-action="Edit" asp-controller="Admin">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="form-group">
+        <input type="hidden" asp-for="Id" />
+    </div>
+    <div class="form-group">
+            <label asp-for="UserName" class="control-label">Имя юзера</label>
+            <input type="text" asp-for="UserName" class="form-control" />
+        </div>
+    <div class="form-group">
+        <label asp-for="Email" class="control-label">Email</label>
+        <input type="text" asp-for="Email" class="form-control" />
+    </div> 
+    <div class="form-group">
+        @foreach (IdentityRole role in Model.AllRoles)
+        {
+            <input type="checkbox" name="roles" value="@role.Name"
+                    @(Model.UserRoles.Contains(role.Name)?"checked=\"checked\"":"")/>@role.Name<br/>
+        }
+    </div>
+    <div class="form-group">
+        <input type="submit" value="Сохранить" class="btn btn-outline-secondary" />
+    </div>
+</form>
