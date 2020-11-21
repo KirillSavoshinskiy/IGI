@@ -45,5 +45,7 @@ namespace IGI.Models
         public List<Img> Images { get; set; }
         
         public int Hours { get; set; }
+        
+        public string JobId { get; set; }
     }
 }

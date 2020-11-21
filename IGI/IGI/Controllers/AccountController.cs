@@ -1,6 +1,7 @@
-﻿﻿using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -181,18 +182,17 @@ namespace IGI.Controllers
         [Authorize]
         public async Task<IActionResult> CreateLot(CreateLotViewModel viewModel)
         {
-            var cookie = HttpContext.Request.Cookies["hour"];
-            var hour = Int32.Parse(cookie);
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var hour = Int32.Parse(HttpContext.Request.Cookies["timeZone"])/60; 
+            var user = await _userManager.FindByNameAsync(User.Identity.Name); 
 
-            var hours = hour - DateTime.Now.Hour;
-
-            if (viewModel.StartSale < DateTime.Now.AddHours(hours))
+            var startSale = viewModel.StartSale.AddHours(hour);
+            var finishSale = viewModel.FinishSale.AddHours(hour);
+            if (startSale < DateTime.UtcNow)
             {
                 ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас");
             }
 
-            if (viewModel.StartSale > viewModel.FinishSale)
+            if (startSale > finishSale)
             {
                 ModelState.AddModelError("", "Конец торгов не может быть раньше чем старт");
             }
@@ -205,15 +205,19 @@ namespace IGI.Controllers
                     Name = viewModel.Name,
                     Description = viewModel.Description,
                     Price = viewModel.Price,
-                    StartSale = viewModel.StartSale,
-                    FinishSale = viewModel.FinishSale,
+                    StartSale = startSale,
+                    FinishSale = finishSale,
                     User = user,
-                    CategoryId = viewModel.CategoryId,
-                    Hours = hours
+                    CategoryId = viewModel.CategoryId
                 };
                 await _context.Lots.AddAsync(lot);
                 await _context.SaveChangesAsync();
                 await _saveImage.SaveImg(viewModel.Images, _appEnvironment, lot);
+                var jobId = BackgroundJob.Schedule<FinishAlertSale>(x => x.Alert(lot.Id),
+                    finishSale - DateTime.UtcNow);
+                lot.JobId = jobId;
+                _context.Lots.Update(lot); 
+                await _context.SaveChangesAsync();
                 return RedirectToAction("Index", "Home");
             }
 
@@ -233,17 +237,17 @@ namespace IGI.Controllers
                 return Content("Вы пытаетесь войти в чужой профиль");
             }
 
-            if ((lot.StartSale < DateTime.Now.AddHours(lot.Hours)) &&
-                (lot.FinishSale > DateTime.Now.AddHours(lot.Hours)))
+            if (lot.StartSale < DateTime.UtcNow &&
+                lot.FinishSale > DateTime.UtcNow)
             {
                 return Content("Вы не можете изменять лот, так как торги начались");
             }
 
-            if (lot.FinishSale < DateTime.Now.AddHours(lot.Hours))
+            if (lot.FinishSale < DateTime.UtcNow)
             {
                 return Content("Вы не можете изменять лот, так как торги закончились");
             }
-
+            
             var viewModel = new EditLotViewModel
             {
                 Id = lot.Id,
@@ -254,6 +258,7 @@ namespace IGI.Controllers
                 FinishSale = lot.FinishSale,
                 CategoryId = lot.CategoryId
             };
+            
             ViewData["CategoryId"] = new SelectList(_context.Set<Category>(), "Id", "Name");
             return View(viewModel);
         }
@@ -263,7 +268,7 @@ namespace IGI.Controllers
         {
             var lot = _context.Lots.Where(i => i.Id == viewModel.Id)
                 .Include(u => u.User).First();
-            if (viewModel.StartSale < DateTime.Now.AddHours(lot.Hours))
+            if (viewModel.StartSale < DateTime.UtcNow)
             {
                 ModelState.AddModelError("", "Старт торгов не может быть раньше чем сейчас");
             }
@@ -287,6 +292,10 @@ namespace IGI.Controllers
                 lot.FinishSale = viewModel.FinishSale;
                 lot.CategoryId = viewModel.CategoryId;
                 lot.SentEmail = false;
+                BackgroundJob.Delete(lot.JobId);
+                var jobId = BackgroundJob.Schedule<FinishAlertSale>(x => x.Alert(lot.Id),
+                    viewModel.FinishSale - DateTime.UtcNow);
+                lot.JobId = jobId;
                 _context.Images.RemoveRange(_context.Images.Where(i => i.LotId == lot.Id));
                 await _saveImage.SaveImg(viewModel.Images, _appEnvironment, lot);
                 _context.Lots.Update(lot);
@@ -308,10 +317,11 @@ namespace IGI.Controllers
             {
                 return Content("Вы пытаетесь войти в чужой профиль");
             }
-            _deleteLot.Delete(lot); 
+
+            _deleteLot.Delete(lot);
             return RedirectToAction("Profile", new {name = lot.User.UserName});
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
         {

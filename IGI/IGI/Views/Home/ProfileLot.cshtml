@@ -1,5 +1,5 @@
 ﻿﻿
-@model IGI.Models.Lot;
+@model IGI.ViewModels.ProfileLotViewModel;
 
 @{
     ViewBag.Title = "Информация о лоте";
@@ -9,7 +9,7 @@
 <h2>Информация о лоте</h2>
 <div>
     <div class="row">
-        @foreach (var img in Model.Images)
+        @foreach (var img in Model.Lot.Images)
         {
             <div class="p-div-img">
                 <img src="@img.ImgPath" alt="" class="p-img"/>
@@ -19,13 +19,13 @@
     <div class="row">
         <div class="col box-shadow">
             <ul>
-                <li style="list-style-type: none;"><h6>@Model.Name</h6></li>
-                <li style="list-style-type: none;"><span>Лот № @Model.Id</span></li>
-                <li style="list-style-type: none;"><span>Продавец: @Model.User.UserName</span></li>
-                @if (Model.CategoryId != null)
+                <li style="list-style-type: none;"><h6>@Model.Lot.Name</h6></li>
+                <li style="list-style-type: none;"><span>Лот № @Model.Lot.Id</span></li>
+                <li style="list-style-type: none;"><span>Продавец: @Model.Lot.User.UserName</span></li>
+                @if (Model.Lot.CategoryId != null)
                 {
                     <li style="list-style-type: none;">
-                        <span>В категории: @Model.Category.Name</span>
+                        <span>В категории: @Model.Lot.Category.Name</span>
                     </li>
                 }
                 else
@@ -37,12 +37,12 @@
                 <li style="list-style-type: none;">
                     <img src="/Icons/cal.png" alt="price" width="15" height="15" class="icon">
                     <h6 style=" float: left; margin-top: 2px; margin-right: 2px;">Старт торгов:</h6>
-                    <p>@Model.StartSale</p>
+                    <p>@Model.Lot.StartSale.AddHours(Model.TimeZone)</p>
                 </li>
                 <li style="list-style-type: none;">
                     <img src="/Icons/cal2.png" alt="price" width="15" height="15" class="icon">
                     <h6 style=" float: left; margin-top: 2px; margin-right: 2px;">Конец торгов:</h6>
-                    <p>@Model.FinishSale</p>
+                    <p>@Model.Lot.FinishSale.AddHours(Model.TimeZone)</p>
                 </li>
             </ul>
         </div>
@@ -50,12 +50,12 @@
             <li style="list-style-type: none;">
                 <img src="/Icons/price.png" alt="price" width="15" height="15" class="icon">
                 <h5 style=" float: left; margin-right: 2px;">Текущая цена:</h5>
-                <p id="price">@Model.Price BYN</p>
+                <p id="price">@Model.Lot.Price BYN</p>
                 <p id="s"></p>
             </li>
             @if (User.Identity.IsAuthenticated 
-                 && (Model.StartSale <= DateTime.Now.AddHours(Model.Hours) 
-                     && Model.FinishSale > DateTime.Now.AddHours(Model.Hours) ))
+                 && Model.Lot.StartSale <= DateTime.Now 
+                     && Model.Lot.FinishSale > DateTime.Now)
             {
                 <li style="list-style-type: none;">
                     <h5 style="margin-top: 2px; margin-right: 2px;">Введите свою ставку:</h5> 
@@ -68,11 +68,11 @@
             {
                 <h5 style="margin-top: 2px; margin-right: 2px;">Вы не авторизованы и не можете делать ставки</h5>
             }
-            else if (Model.FinishSale < DateTime.Now.AddHours(Model.Hours) )
+            else if (Model.Lot.FinishSale < DateTime.Now)
             {
                 <h5 style="margin-top: 2px; margin-right: 2px;">Торги завершились</h5>
             }
-            else if (Model.StartSale > DateTime.Now.AddHours(Model.Hours) )
+            else if (Model.Lot.StartSale > DateTime.Now)
             {
                 <h5 style="margin-top: 2px; margin-right: 2px;">Торги ещё не начались</h5>
             }
@@ -81,12 +81,13 @@
     <div class="row">
         <div class="col box-shadow">
             <h5>Описание лота:</h5>
-            <text>@Model.Description</text>
+            <text>@Model.Lot.Description</text>
         </div>
     </div>
 </div>
 
 <script src="~/lib/signalr/dist/browser/signalr.js"></script>
 <script src="~/js/increaseRates.js"></script>
+<script src="~/js/getClientZone.js"></script>
  
  

@@ -7,5 +7,7 @@ namespace IGI.ViewModels
     {
         public List<Lot> Lots { get; set; }
         public PageViewModel PageViewModel { get; set; }
+        
+        public int TimeZone { get; set; }
     }
 }

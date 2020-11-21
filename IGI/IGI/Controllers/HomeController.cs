@@ -29,15 +29,14 @@ namespace IGI.Controllers
             var lots = await _context.Lots.Include(img => img.Images)
                 .Include(u => u.User).Include(c => c.Category)
                 .ToListAsync();
-
-
-            RecurringJob.AddOrUpdate<AlertFinishSale>(x => x.Alert(), Cron.Minutely);
+ 
             PageViewModel pageViewModel = new PageViewModel(lots.Count, pageIndex, countLots);
-            var items = lots.Skip((pageIndex - 1) * countLots).Take(countLots).ToList();
+            var items = lots.Skip((pageIndex - 1) * countLots).Take(countLots).ToList(); 
             LotViewModel viewModel = new LotViewModel
             {
                 PageViewModel = pageViewModel,
-                Lots = items
+                Lots = items,
+                TimeZone = -Int32.Parse(HttpContext.Request.Cookies["ClientZone"]) / 60
             };
             return View(viewModel);
         }
@@ -47,8 +46,12 @@ namespace IGI.Controllers
         {
             var lot = _context.Lots.Where(i => i.Id == id).Include(img => img.Images)
                 .Include(u => u.User).Include(c => c.Category).First();
-            
-            return View(lot);
+            ProfileLotViewModel viewModel = new ProfileLotViewModel()
+            {
+                Lot = lot,
+                TimeZone = -Int32.Parse(HttpContext.Request.Cookies["ClientZone"]) / 60
+            };
+            return View(viewModel);
         }
 
         public IActionResult Privacy()
