@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
@@ -11,38 +11,31 @@ namespace IGI.Services
 {
     public class SaveImage : ISaveImage
     {
-        IServiceProvider _serviceProvider;
-
-        public SaveImage(IServiceProvider serviceProvider)
+        ApplicationContext _context;
+        public SaveImage(ApplicationContext context)
         {
-            _serviceProvider = serviceProvider;
+            _context = context;
         }
 
         public async Task SaveImg(IFormFileCollection images, IWebHostEnvironment appEnvironment, Lot lot)
         {
-            using (var scope = _serviceProvider.CreateScope())
+            foreach (var image in images)
             {
-                await using (var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>())
+                var path = "/Files/" + image.FileName;
+                await using (var fileStream =
+                    new FileStream(appEnvironment.WebRootPath + path, FileMode.Create))
                 {
-                    foreach (var image in images)
-                    {
-                        var path = "/Files/" + image.FileName;
-                        await using (var fileStream =
-                            new FileStream(appEnvironment.WebRootPath + path, FileMode.Create))
-                        {
-                            await image.CopyToAsync(fileStream);
-                        }
-
-                        var img = new Img
-                        {
-                            ImgPath = path,
-                            Name = image.Name,
-                            LotId = lot.Id
-                        };
-                        await context.Images.AddAsync(img);
-                        await context.SaveChangesAsync();
-                    }
+                    await image.CopyToAsync(fileStream);
                 }
+
+                var img = new Img
+                {
+                    ImgPath = path,
+                    Name = image.Name,
+                    LotId = lot.Id
+                };
+                await _context.Images.AddAsync(img);
+                await _context.SaveChangesAsync();
             }
         }
     }

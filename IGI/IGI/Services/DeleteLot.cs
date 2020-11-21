@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,23 +9,16 @@ namespace IGI.Services
 {
     public class DeleteLot : IDeleteLot
     {
-        IServiceProvider _serviceProvider;
-
-        public DeleteLot(IServiceProvider serviceProvider)
+        private ApplicationContext _context;
+        public DeleteLot(ApplicationContext context)
         {
-            _serviceProvider = serviceProvider;
+            _context = context;
         }
 
         public async void Delete(Lot lot)
         {
-            using (var scope = _serviceProvider.CreateScope())
-            {
-                using (var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>())
-                {
-                    context.Lots.Remove(lot);
-                    await context.SaveChangesAsync();
-                }
-            }
+            _context.Lots.Remove(lot);
+            await _context.SaveChangesAsync();
         }
     }
 }
