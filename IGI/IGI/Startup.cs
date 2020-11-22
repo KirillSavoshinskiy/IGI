@@ -48,7 +48,7 @@ namespace IGI
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            //env.EnvironmentName = "Production";
+            env.EnvironmentName = "Production";
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -59,7 +59,7 @@ namespace IGI
                 app.UseHsts();
             }
             app.UseSerilogRequestLogging();
-            //app.UseStatusCodePagesWithReExecute("/Error/Index", "?statusCode={0}"); 
+            app.UseStatusCodePagesWithReExecute("/Error/Index", "?statusCode={0}"); 
             app.UseHangfireServer();
             app.UseHangfireDashboard();
             app.UseHttpsRedirection();

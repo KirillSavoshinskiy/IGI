@@ -35,8 +35,7 @@ namespace IGI.Controllers
             LotViewModel viewModel = new LotViewModel
             {
                 PageViewModel = pageViewModel,
-                Lots = items,
-                TimeZone = -Int32.Parse(HttpContext.Request.Cookies["ClientZone"]) / 60
+                Lots = items
             };
             return View(viewModel);
         }

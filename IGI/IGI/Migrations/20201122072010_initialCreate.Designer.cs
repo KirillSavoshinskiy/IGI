@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IGI.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20201118065738_initiall")]
-    partial class initiall
+    [Migration("20201122072010_initialCreate")]
+    partial class initialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -77,8 +77,8 @@ namespace IGI.Migrations
                     b.Property<DateTime>("FinishSale")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Hours")
-                        .HasColumnType("int");
+                    b.Property<string>("JobId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()

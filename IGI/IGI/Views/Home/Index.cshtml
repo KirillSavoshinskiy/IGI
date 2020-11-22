@@ -5,9 +5,9 @@
     Layout = "_Layout";
 }
 
-@foreach(var lot in Model.Lots){
-
-    <div class="row box-shadow div-lot"> 
+@foreach (var lot in Model.Lots)
+{
+    <div class="row box-shadow div-lot">
         <div class="col">
             <div class="div-img">
                 <img src="@lot.Images.First().ImgPath" alt="" class="img"/>
@@ -15,25 +15,37 @@
         </div>
         <div class="lot-info">
             <ul>
-                <li style="list-style-type: none;"><h6>@lot.Name</h6></li>
-                <li style="list-style-type: none;"><span>Лот № @lot.Id</span></li>
-                <li style="list-style-type: none;"><span>Продавец: @lot.User.UserName</span></li>
+                <li style="list-style-type: none;">
+                    <h6>@lot.Name</h6>
+                </li>
+                <li style="list-style-type: none;">
+                    <span>Лот № @lot.Id</span>
+                </li>
+                <li style="list-style-type: none;">
+                    <span>Продавец: @lot.User.UserName</span>
+                </li>
                 @if (lot.CategoryId != null)
                 {
-                    <li style="list-style-type: none;"><span>В категории: @lot.Category.Name</span></li>
+                    <li style="list-style-type: none;">
+                        <span>В категории: @lot.Category.Name</span>
+                    </li>
                 }
                 else
                 {
-                    <li style="list-style-type: none;"><span>В категории: не принадлежит категории</span></li>
+                    <li style="list-style-type: none;">
+                        <span>В категории: не принадлежит категории</span>
+                    </li>
                 }
-                
+
                 <li style="list-style-type: none;">
-                    <a class="btn badge-primary" 
-                       asp-controller="Home"  
-                       asp-action="ProfileLot" 
-                       asp-route-id="@lot.Id">Подробнее</a>
+                    <a class="btn badge-primary"
+                       asp-controller="Home"
+                       asp-action="ProfileLot"
+                       asp-route-id="@lot.Id">
+                        Подробнее
+                    </a>
                 </li>
-            </ul> 
+            </ul>
         </div>
         <div class="lot-info">
             <ul>
@@ -44,13 +56,19 @@
                 </li>
                 <li style="list-style-type: none;">
                     <img src="/Icons/cal.png" alt="price" width="15" height="15" class="icon">
-                    <h6 style=" float: left; margin-top: 2px; margin-right: 2px;">Старт торгов:</h6>
-                    <p>@lot.StartSale.AddHours(Model.TimeZone)</p>
-                </li>
-                <li style="list-style-type: none;">
-                    <img src="/Icons/cal2.png" alt="price" width="15" height="15" class="icon">
-                    <h6 style=" float: left; margin-top: 2px; margin-right: 2px;">Конец торгов:</h6>
-                    <p>@lot.FinishSale.AddHours(Model.TimeZone)</p>
+                    <h6 style=" float: left; margin-top: 2px; margin-right: 2px;">Статус:</h6>
+                    @if (lot.StartSale <= DateTime.UtcNow && lot.FinishSale > DateTime.UtcNow)
+                    {
+                        <p>Активен</p>
+                    }
+                    else if (lot.FinishSale < DateTime.UtcNow)
+                    {
+                        <p>Торги завершились</p>
+                    }
+                    else if (lot.StartSale > DateTime.UtcNow)
+                    {
+                        <p>Торги ещё не начались</p>
+                    }
                 </li>
             </ul>
         </div>
@@ -61,7 +79,7 @@
 {
     <a asp-action="Index"
        asp-route-page="@(Model.PageViewModel.PageNumber - 1)"
-       class="btn btn-outline-dark"> 
+       class="btn btn-outline-dark">
         Назад
     </a>
 }
@@ -70,7 +88,7 @@
     <a asp-action="Index"
        asp-route-page="@(Model.PageViewModel.PageNumber + 1)"
        class="btn btn-outline-dark">
-        Вперед 
+        Вперед
     </a>
 }
 <script src="~/js/getClientZone.js"></script>

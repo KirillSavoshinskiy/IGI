@@ -42,9 +42,7 @@ namespace IGI.Models
         public int? CategoryId { get; set; }
         public Category Category { get; set; }
         
-        public List<Img> Images { get; set; }
-        
-        public int Hours { get; set; }
+        public List<Img> Images { get; set; } 
         
         public string JobId { get; set; }
     }

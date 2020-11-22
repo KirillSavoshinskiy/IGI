@@ -75,8 +75,8 @@ namespace IGI.Migrations
                     b.Property<DateTime>("FinishSale")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Hours")
-                        .HasColumnType("int");
+                    b.Property<string>("JobId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()

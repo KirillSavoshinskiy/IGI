@@ -54,8 +54,8 @@
                 <p id="s"></p>
             </li>
             @if (User.Identity.IsAuthenticated 
-                 && Model.Lot.StartSale <= DateTime.Now 
-                     && Model.Lot.FinishSale > DateTime.Now)
+                 && Model.Lot.StartSale <= DateTime.UtcNow 
+                     && Model.Lot.FinishSale > DateTime.UtcNow)
             {
                 <li style="list-style-type: none;">
                     <h5 style="margin-top: 2px; margin-right: 2px;">Введите свою ставку:</h5> 
@@ -68,11 +68,11 @@
             {
                 <h5 style="margin-top: 2px; margin-right: 2px;">Вы не авторизованы и не можете делать ставки</h5>
             }
-            else if (Model.Lot.FinishSale < DateTime.Now)
+            else if (Model.Lot.FinishSale < DateTime.UtcNow)
             {
                 <h5 style="margin-top: 2px; margin-right: 2px;">Торги завершились</h5>
             }
-            else if (Model.Lot.StartSale > DateTime.Now)
+            else if (Model.Lot.StartSale > DateTime.UtcNow)
             {
                 <h5 style="margin-top: 2px; margin-right: 2px;">Торги ещё не начались</h5>
             }
