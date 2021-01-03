@@ -1,2 +1,2 @@
 # IGI
-https://onlineauction1.azurewebsites.net/
+Simple online auction
